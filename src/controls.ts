@@ -32,6 +32,11 @@ export const onboardingControls: OnboardingControl[] = [
   toggle(MESSAGES, 'invitation.enabled', 'Account invitation', 'Also send the invitation text below.'),
   text(MESSAGES, 'invitation.text', 'Invitation text', 'For example how and where to create an account. Use {name} and {scope}.', 2000),
   toggle(MESSAGES, 'invitation.skipLinked', 'Skip if already linked', 'Do not send the invitation to people who already have a linked account.'),
+  text(MESSAGES, 'catchUp.intro', 'Late welcome opening', 'Opening of the one-time late welcome for people who were already here. Empty uses the built-in text. Use {name} and {scope}.', 2000),
+  number(GENERAL, 'catchUp.batchSize', 'Late welcomes per batch', 'People who get the late welcome in each batch.', 1, 20),
+  number(GENERAL, 'catchUp.intervalMinutes', 'Minutes between batches', 'Pause between late-welcome batches, so the bot never sends a burst.', 1, 240, 'minutes'),
+  control(GENERAL, 'catchUp.sendFrom', 'Late welcomes from', 'Earliest local time (HH:MM) for late welcomes.', { type: 'string', max: 5 }, 'text'),
+  control(GENERAL, 'catchUp.sendUntil', 'Late welcomes until', 'Latest local time (HH:MM) for late welcomes.', { type: 'string', max: 5 }, 'text'),
   toggle(MESSAGES, 'welcomeBack.enabled', 'Welcome back', 'Send a short welcome back to people who left every group here and return.'),
   text(MESSAGES, 'welcomeBack.text', 'Welcome back text', 'Empty uses the built-in text. Use {name} and {scope}.', 1000),
   number(MESSAGES, 'welcomeBack.minAbsenceDays', 'Away at least', 'Days away before a return gets the welcome back.', 0, 3650, 'days')

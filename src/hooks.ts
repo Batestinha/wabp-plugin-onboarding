@@ -1,5 +1,7 @@
 import type { PluginAction } from '@wabs/plugin-sdk/actions';
 import type { PluginParticipantChangeEvent, PluginRuntimeHooks } from '@wabs/plugin-sdk/hooks';
+import { runCatchUpBatch } from './catchUp';
+import { CATCH_UP_JOB } from './constants';
 import {
   configFor,
   database,
@@ -27,6 +29,11 @@ export function createOnboardingHooks(context: OnboardingDeps): PluginRuntimeHoo
     },
     async onParticipantChange(event) {
       return handleParticipantChange(context, event);
+    },
+    async onPluginJob(job) {
+      if (job.jobName !== CATCH_UP_JOB) return;
+      const scopeId = (job.payload as { scopeId?: unknown } | undefined)?.scopeId;
+      return runCatchUpBatch(context, typeof scopeId === 'string' ? scopeId : job.scopeId);
     }
   };
 }

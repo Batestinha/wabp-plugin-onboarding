@@ -7,4 +7,6 @@ A WABS plugin for WABP. It welcomes people **once**, the first time they arrive 
 - **Current members are recorded first** when it is switched on, so they are never welcomed.
 - **Welcome back:** someone who left every group of the scope and returns after a while (30 days by default) gets a short welcome back instead.
 
-Commands: `/rules` for everyone; `/onboarding preview|status|resend` for admins. Starts disabled. Needs WABP core API 0.3.25 (`newcomerGuideFor`, `identityAccess.hasLinkedAccount`). Translations: English and European Portuguese.
+**Late welcome (one time):** `/onboarding catch-up` shows how many people were here before onboarding started and never had the welcome. `/onboarding catch-up start <that number>` sends it to them privately, once each, in paced batches (3 people every 5 minutes, 10:00–20:00 in the scope's time zone, by default), with its own opening line. People who left in the meantime, or are suspended or expelled, are skipped. `/onboarding catch-up stop` stops it; starting again only reaches those who didn't get it. The messages are prepared when it starts, and the admin who started it is told when it's done.
+
+Commands: `/rules` for everyone; `/onboarding preview|status|resend|catch-up` for admins. Starts disabled. Needs WABP core API 0.3.25 (`newcomerGuideFor`, `identityAccess.hasLinkedAccount`). Translations: English and European Portuguese.

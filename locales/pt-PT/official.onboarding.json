@@ -29,5 +29,15 @@
   "official.onboarding.state.off": "desligadas",
   "official.onboarding.resend.done": "Voltei a enviar as boas-vindas a {member}.",
   "official.onboarding.resend.usage": "Menciona o membro, ou responde a uma das mensagens dele.",
-  "official.onboarding.resend.unknown": "Não consegui identificar esse membro."
+  "official.onboarding.resend.unknown": "Não consegui identificar esse membro.",
+  "official.onboarding.help.cmd.catch-up": "Envia as boas-vindas, uma vez, a todos os que já cá estavam antes de as boas-vindas começarem.",
+  "official.onboarding.catchUp.introDefault": "Olá {name}! Já estavas em {scope} antes de começarmos a dar as boas-vindas por aqui, por isso eis o que os recém-chegados recebem agora.",
+  "official.onboarding.catchUp.none": "Toda a gente daqui já recebeu as boas-vindas.",
+  "official.onboarding.catchUp.preview": "{count} pessoas daqui nunca receberam as boas-vindas. Vão em privado, {batch} pessoas a cada {minutes} minutos entre as {from} e as {until}: cerca de {hours} horas de envio. Cada pessoa recebe-as uma vez. Para começar, envia /onboarding catch-up start {count}",
+  "official.onboarding.catchUp.countChanged": "O número mudou: agora são {count}. Envia /onboarding catch-up start {count} para avançar.",
+  "official.onboarding.catchUp.started": "Começou: {count} boas-vindas atrasadas, {batch} a cada {minutes} minutos entre as {from} e as {until} (cerca de {hours} horas). Aviso-te quando terminar. /onboarding catch-up stop para parar.",
+  "official.onboarding.catchUp.progress": "Boas-vindas atrasadas: {sent} enviadas, {skipped} saltadas, {left} por enviar.",
+  "official.onboarding.catchUp.stopped": "Parado depois de {sent} boas-vindas atrasadas; {left} não enviadas. Correr outra vez só envia a quem não as recebeu.",
+  "official.onboarding.catchUp.notRunning": "Não há boas-vindas atrasadas a serem enviadas agora.",
+  "official.onboarding.catchUp.finished": "Boas-vindas atrasadas concluídas: {sent} enviadas, {skipped} saltadas (saíram dos grupos, suspensos ou expulsos)."
 }

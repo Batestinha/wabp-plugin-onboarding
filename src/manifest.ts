@@ -1,6 +1,7 @@
 import type { PluginManifest } from '@wabs/plugin-sdk/manifest';
 import { onboardingConfigSchema } from './config';
 import {
+  CATCH_UP_JOB,
   ONBOARDING_COMMANDS,
   ONBOARDING_CORE_API_RANGE,
   ONBOARDING_DATABASE,
@@ -45,7 +46,7 @@ export const onboardingManifest: PluginManifest = {
         titleKey: `${ns}.help.manage.title`,
         summaryKey: `${ns}.help.manage.summary`,
         order: 20,
-        commands: ['/onboarding preview', '/onboarding status', '/onboarding resend'],
+        commands: ['/onboarding preview', '/onboarding status', '/onboarding resend', '/onboarding catch-up'],
         instructionKeys: [`${ns}.help.manage.instruction`],
         exampleKeys: [`${ns}.help.manage.example`],
         keywords: ['welcome', 'newcomer', 'onboarding'],
@@ -53,12 +54,12 @@ export const onboardingManifest: PluginManifest = {
       }
     ]
   },
-  eventSubscriptions: ['participant.change'],
+  eventSubscriptions: ['participant.change', 'plugin.job'],
   requiredPermissions: [ONBOARDING_MANAGE_PERMISSION],
   requiredBotCapabilities: [],
   configSchema: onboardingConfigSchema,
   dangerousActions: [],
-  backgroundJobs: [],
+  backgroundJobs: [CATCH_UP_JOB],
   databases: [{ name: ONBOARDING_DATABASE, engine: 'sqlite', scope: 'account', migrations: 'migrations/onboarding' }],
   dataVersion: '1',
   dependencies: [],
@@ -68,7 +69,8 @@ export const onboardingManifest: PluginManifest = {
     useCases: [
       'Welcome newcomers privately, once per scope, never again when they join another group of it.',
       'Show the rules with /rules.',
-      'Preview the welcome or send it again to someone.'
+      'Preview the welcome or send it again to someone.',
+      'Once, send a paced late welcome to everyone who was here before onboarding started.'
     ],
     prerequisites: ['enabled=true in the target scope.', 'Groups in ASSIST or MANAGE mode, so the bot may send messages.', 'WABP core API 0.3.25 or later for the guide and the linked-account check.'],
     limitations: [
@@ -78,7 +80,8 @@ export const onboardingManifest: PluginManifest = {
     ],
     workflows: [
       { intent: 'onboarding_rules', description: 'Show the rules.', commands: ['/rules'] },
-      { intent: 'onboarding_manage', description: 'Preview, count or resend the welcome.', commands: ['/onboarding preview', '/onboarding status', '/onboarding resend'] }
+      { intent: 'onboarding_manage', description: 'Preview, count or resend the welcome.', commands: ['/onboarding preview', '/onboarding status', '/onboarding resend'] },
+      { intent: 'onboarding_catch_up', description: 'Send the late welcome to people who were already here, once and paced.', commands: ['/onboarding catch-up'] }
     ]
   }
 };

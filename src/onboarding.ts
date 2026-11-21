@@ -20,6 +20,8 @@ export interface OnboardingDeps {
   resolveStableIdentityById?: ((identityId: string) => Promise<StableIdentityAddressResolution>) | undefined;
   listEnabledScopes?: (() => Promise<Array<{ scopeId: string; name?: string | undefined }>>) | undefined;
   newcomerGuideFor?: PluginNewcomerGuideFor | undefined;
+  memberStandingsForScope?: ((scopeId: string) => Promise<Array<{ identityId: string; standing: string }>>) | undefined;
+  clockFor?: ((scopeId: string) => Promise<{ timezone: string }>) | undefined;
   identityAccess?: { hasLinkedAccount?(identityId: string): Promise<boolean> } | undefined;
   i18n?: {
     translatorForScope?(scopeId: string): Promise<TranslateFn>;
@@ -75,6 +77,10 @@ export async function personByWid(deps: OnboardingDeps, wid: string): Promise<Pe
   }
 }
 
+export async function translatorForPerson(deps: OnboardingDeps, identityId: string, scopeId: string): Promise<TranslateFn> {
+  return translatorFor(deps, identityId, scopeId);
+}
+
 export async function scopeName(deps: OnboardingDeps, scopeId: string): Promise<string> {
   const scopes = await deps.listEnabledScopes?.().catch(() => []) ?? [];
   return scopes.find((scope) => scope.scopeId === scopeId)?.name?.trim() || scopeId;
@@ -118,11 +124,15 @@ export async function onboardingActions(deps: OnboardingDeps, input: {
   groupWid?: string | undefined;
   /** When set, a failed private delivery posts the first message in this group with a mention. */
   fallbackGroupWid?: string | undefined;
+  /** Replaces the welcome line, for the late welcome of people who were already here. */
+  intro?: string | undefined;
 }): Promise<PluginAction[]> {
   const { config, scopeId, person } = input;
   const t = await translatorFor(deps, person.identityId, scopeId);
   const values = { name: person.name, scope: await scopeName(deps, scopeId) };
-  const welcome = fill(config.welcome.text.trim() || t(`${ns}.welcome.default`, values), values);
+  const welcome = input.intro !== undefined
+    ? fill(input.intro.trim() || t(`${ns}.catchUp.introDefault`, values), values)
+    : fill(config.welcome.text.trim() || t(`${ns}.welcome.default`, values), values);
   const rules = config.rules.text.trim();
   let guide: string[] = [];
   if (config.guide.enabled && deps.newcomerGuideFor) {

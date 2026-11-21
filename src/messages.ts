@@ -34,5 +34,15 @@ export const onboardingMessages: MessageCatalog = {
   [`${ns}.state.off`]: 'off',
   [`${ns}.resend.done`]: 'I sent the welcome to {member} again.',
   [`${ns}.resend.usage`]: 'Mention the member, or reply to one of their messages.',
-  [`${ns}.resend.unknown`]: 'I could not identify that member.'
+  [`${ns}.resend.unknown`]: 'I could not identify that member.',
+  [`${ns}.help.cmd.catch-up`]: 'Send the welcome, once, to everyone who was here before onboarding started.',
+  [`${ns}.catchUp.introDefault`]: 'Hi {name}! You were in {scope} before we started welcoming people here, so here is what newcomers get now.',
+  [`${ns}.catchUp.none`]: 'Everyone here has already had the welcome.',
+  [`${ns}.catchUp.preview`]: '{count} people here never had the welcome. It goes out privately, {batch} people every {minutes} minutes between {from} and {until}: about {hours} hours of sending. Each person gets it once. To start, send /onboarding catch-up start {count}',
+  [`${ns}.catchUp.countChanged`]: 'The number has changed: it is now {count}. Send /onboarding catch-up start {count} to go ahead.',
+  [`${ns}.catchUp.started`]: 'Started: {count} late welcomes, {batch} every {minutes} minutes between {from} and {until} (about {hours} hours). I will tell you when it is done. /onboarding catch-up stop stops it.',
+  [`${ns}.catchUp.progress`]: 'Late welcomes: {sent} sent, {skipped} skipped, {left} to go.',
+  [`${ns}.catchUp.stopped`]: 'Stopped after {sent} late welcomes; {left} not sent. Running it again only sends to those who did not get it.',
+  [`${ns}.catchUp.notRunning`]: 'No late welcome is being sent right now.',
+  [`${ns}.catchUp.finished`]: 'Late welcomes done: {sent} sent, {skipped} skipped (left the groups, suspended or expelled).'
 };

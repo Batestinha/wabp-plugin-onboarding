@@ -17,7 +17,8 @@
     "/rules",
     "/onboarding preview",
     "/onboarding status",
-    "/onboarding resend"
+    "/onboarding resend",
+    "/onboarding catch-up"
   ],
   "help": {
     "featureId": "onboarding",
@@ -65,7 +66,8 @@
         "commands": [
           "/onboarding preview",
           "/onboarding status",
-          "/onboarding resend"
+          "/onboarding resend",
+          "/onboarding catch-up"
         ],
         "instructionKeys": [
           "official.onboarding.help.manage.instruction"
@@ -86,14 +88,17 @@
     ]
   },
   "eventSubscriptions": [
-    "participant.change"
+    "participant.change",
+    "plugin.job"
   ],
   "requiredPermissions": [
     "plugin.onboarding.manage"
   ],
   "requiredBotCapabilities": [],
   "dangerousActions": [],
-  "backgroundJobs": [],
+  "backgroundJobs": [
+    "catch-up.batch"
+  ],
   "databases": [
     {
       "name": "onboarding",
@@ -112,7 +117,8 @@
     "useCases": [
       "Welcome newcomers privately, once per scope, never again when they join another group of it.",
       "Show the rules with /rules.",
-      "Preview the welcome or send it again to someone."
+      "Preview the welcome or send it again to someone.",
+      "Once, send a paced late welcome to everyone who was here before onboarding started."
     ],
     "prerequisites": [
       "enabled=true in the target scope.",
@@ -140,6 +146,13 @@
           "/onboarding status",
           "/onboarding resend"
         ]
+      },
+      {
+        "intent": "onboarding_catch_up",
+        "description": "Send the late welcome to people who were already here, once and paced.",
+        "commands": [
+          "/onboarding catch-up"
+        ]
       }
     ]
   },
@@ -158,6 +171,11 @@
       "invitation.enabled",
       "invitation.text",
       "invitation.skipLinked",
+      "catchUp.intro",
+      "catchUp.batchSize",
+      "catchUp.intervalMinutes",
+      "catchUp.sendFrom",
+      "catchUp.sendUntil",
       "welcomeBack.enabled",
       "welcomeBack.text",
       "welcomeBack.minAbsenceDays"
@@ -355,12 +373,100 @@
       },
       {
         "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.intro",
+        "path": "catchUp.intro",
+        "label": "Late welcome opening",
+        "description": "Opening of the one-time late welcome for people who were already here. Empty uses the built-in text. Use {name} and {scope}.",
+        "section": "Messages",
+        "order": 120,
+        "schema": {
+          "type": "string",
+          "max": 2000
+        },
+        "ui": {
+          "widget": "textarea",
+          "helpText": "Opening of the one-time late welcome for people who were already here. Empty uses the built-in text. Use {name} and {scope}."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.batchSize",
+        "path": "catchUp.batchSize",
+        "label": "Late welcomes per batch",
+        "description": "People who get the late welcome in each batch.",
+        "section": "Onboarding",
+        "order": 130,
+        "schema": {
+          "type": "number",
+          "min": 1,
+          "max": 20
+        },
+        "ui": {
+          "widget": "number",
+          "helpText": "People who get the late welcome in each batch."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.intervalMinutes",
+        "path": "catchUp.intervalMinutes",
+        "label": "Minutes between batches",
+        "description": "Pause between late-welcome batches, so the bot never sends a burst.",
+        "section": "Onboarding",
+        "order": 140,
+        "schema": {
+          "type": "number",
+          "min": 1,
+          "max": 240,
+          "unit": "minutes"
+        },
+        "ui": {
+          "widget": "number",
+          "helpText": "Pause between late-welcome batches, so the bot never sends a burst."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.sendFrom",
+        "path": "catchUp.sendFrom",
+        "label": "Late welcomes from",
+        "description": "Earliest local time (HH:MM) for late welcomes.",
+        "section": "Onboarding",
+        "order": 150,
+        "schema": {
+          "type": "string",
+          "max": 5
+        },
+        "ui": {
+          "widget": "text",
+          "helpText": "Earliest local time (HH:MM) for late welcomes."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.sendUntil",
+        "path": "catchUp.sendUntil",
+        "label": "Late welcomes until",
+        "description": "Latest local time (HH:MM) for late welcomes.",
+        "section": "Onboarding",
+        "order": 160,
+        "schema": {
+          "type": "string",
+          "max": 5
+        },
+        "ui": {
+          "widget": "text",
+          "helpText": "Latest local time (HH:MM) for late welcomes."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.welcomeBack.enabled",
         "path": "welcomeBack.enabled",
         "label": "Welcome back",
         "description": "Send a short welcome back to people who left every group here and return.",
         "section": "Messages",
-        "order": 120,
+        "order": 170,
         "schema": {
           "type": "boolean"
         },
@@ -376,7 +482,7 @@
         "label": "Welcome back text",
         "description": "Empty uses the built-in text. Use {name} and {scope}.",
         "section": "Messages",
-        "order": 130,
+        "order": 180,
         "schema": {
           "type": "string",
           "max": 1000
@@ -393,7 +499,7 @@
         "label": "Away at least",
         "description": "Days away before a return gets the welcome back.",
         "section": "Messages",
-        "order": 140,
+        "order": 190,
         "schema": {
           "type": "number",
           "min": 0,

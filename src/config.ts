@@ -27,6 +27,15 @@ export const onboardingConfigSchema = z.object({
     /** Skip it for people whose identity already has a linked sign-in account. */
     skipLinked: z.boolean().default(true)
   }).strict().default({}),
+  catchUp: z.object({
+    /** Opening of the late welcome for people who were already here. Empty uses the built-in text. Placeholders: {name}, {scope}. */
+    intro: z.string().max(2000).default(''),
+    batchSize: z.number().int().min(1).max(20).default(3),
+    intervalMinutes: z.number().int().min(1).max(240).default(5),
+    /** Local hours (scope time zone) during which late welcomes may go out. */
+    sendFrom: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/u).default('10:00'),
+    sendUntil: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/u).default('20:00')
+  }).strict().default({}),
   welcomeBack: z.object({
     enabled: z.boolean().default(true),
     /** Empty uses the built-in, translated text. Placeholders: {name}, {scope}. */

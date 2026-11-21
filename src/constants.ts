@@ -4,5 +4,6 @@ export const ONBOARDING_VERSION = '0.1.0';
 export const ONBOARDING_CORE_API_RANGE = '^0.3.25';
 export const ONBOARDING_DATABASE = 'onboarding';
 export const ONBOARDING_MANAGE_PERMISSION = 'plugin.onboarding.manage';
-export const ONBOARDING_COMMANDS = ['/rules', '/onboarding preview', '/onboarding status', '/onboarding resend'];
+export const ONBOARDING_COMMANDS = ['/rules', '/onboarding preview', '/onboarding status', '/onboarding resend', '/onboarding catch-up'];
+export const CATCH_UP_JOB = 'catch-up.batch';
 export const DAY_MS = 24 * 60 * 60 * 1000;
