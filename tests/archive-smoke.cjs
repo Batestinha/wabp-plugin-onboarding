@@ -1,0 +1,29 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const root = path.resolve(process.argv[2]);
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'wa-plugin.json')));
+const plugin = require(path.join(root, manifest.entrypoint)).default;
+assert.equal(plugin.manifest.pluginId, manifest.pluginId);
+assert.equal(plugin.manifest.version, manifest.version);
+assert.equal(plugin.manifest.coreApiRange, '^0.3.25');
+assert.equal(typeof plugin.registerHooks, 'function');
+assert.equal(plugin.lifecycle, undefined);
+const pt = JSON.parse(fs.readFileSync(path.join(root, 'locales/pt-PT', manifest.messageNamespace + '.json')));
+for (const key of Object.keys(plugin.manifest.defaultMessages)) assert.ok(pt[key]?.trim(), key);
+assert.ok(fs.existsSync(path.join(root, 'node_modules/@wabs/plugin-sdk/dist/hook-plugin.js')));
+assert.ok(fs.existsSync(path.join(root, 'node_modules/zod/LICENSE')));
+console.log(JSON.stringify({ pluginId: manifest.pluginId, version: manifest.version, standaloneLoad: true, translations: Object.keys(pt).length }));
+
+const compiledConsoleOperations = manifest.consoleOperations ?? [];
+assert.deepEqual(plugin.manifest.consoleOperations ?? [], compiledConsoleOperations);
+assert.deepEqual(plugin.manifest.configuration ?? null, manifest.configuration ?? null);
+if (compiledConsoleOperations.length) {
+  const handlers = plugin.registerConsoleOperations({
+    pluginId: manifest.pluginId, runtimeBindingId: 'fixture-runtime', whatsAppAccountId: 'fixture-account', archive: {}
+  });
+  assert.deepEqual(handlers.map(operation => operation.operationId).sort(), compiledConsoleOperations.map(operation => operation.operationId).sort());
+  for (const operation of handlers) assert.equal(typeof operation.handler, 'function');
+}
+if ((manifest.externalActions ?? []).length) assert.equal(typeof plugin.registerExternalActions, 'function');

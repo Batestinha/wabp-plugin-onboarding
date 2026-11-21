@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "sourceRepository": "https://github.com/Batestinha/wabp-plugin-onboarding",
+  "sdk": {
+    "version": "0.3.37",
+    "path": "vendor/wabs-plugin-sdk-0.3.37-c0eaffccb371.tgz",
+    "sha256": "c0eaffccb37173a7a077f76a2bc80f0d2a3cd5bf93817909a11718a2274191d4",
+    "sourceRepository": "https://github.com/Batestinha/wabp",
+    "sourceDirectory": "packages/plugin-sdk",
+    "sourceCommit": "7c9540f4"
+  },
+  "supersedes": {
+    "pluginId": "official.onboarding-rules",
+    "note": "Retired per-group onboarding; this plugin onboards once per person per scope."
+  }
+}
