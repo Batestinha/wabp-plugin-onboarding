@@ -87,6 +87,16 @@ test('leaving every subgroup counts as leaving the community, even while WhatsAp
   assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui))), ['Welcome back to Climbers, Rui!']);
 });
 
+test('a returning member whose join request the bot approved gets the welcome back', async () => {
+  const { h, hooks, groups } = communityWithMirrors({ welcomeBack: { minAbsenceDays: 0 } });
+  join(groups, 'main@g.us', rui); join(groups, 'parent@g.us', rui); join(groups, 'announce@g.us', rui);
+  await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui, { actor: h.bot }));
+  leave(groups, 'main@g.us', rui);
+  await hooks.onParticipantChange(event(h, 'leave', 'main@g.us', rui, { actor: rui }));
+  join(groups, 'main@g.us', rui);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui, { actor: h.bot }))), ['Welcome back to Climbers, Rui!']);
+});
+
 test('someone already in another group of the scope is not a newcomer', async () => {
   const { h, hooks, groups } = community();
   await hooks.onParticipantChange(event(h, 'join', 'main@g.us', ana)); // seeds the scope

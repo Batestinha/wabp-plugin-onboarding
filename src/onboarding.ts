@@ -209,7 +209,9 @@ export async function decideArrival(deps: OnboardingDeps, input: {
     if (!row.left_scope_at) return { outcome: 'known' };
     const away = now.getTime() - Date.parse(row.left_scope_at);
     clearLeft(db, scopeId, identityId);
-    if (input.byBot || !row.left_voluntarily || !config.welcomeBack.enabled || away < config.welcomeBack.minAbsenceDays * DAY_MS) {
+    // Not byBot: the bot approving a returning member's join request is their own return. Suspension re-adds
+    // stay silent because a removal is never a voluntary departure.
+    if (!row.left_voluntarily || !config.welcomeBack.enabled || away < config.welcomeBack.minAbsenceDays * DAY_MS) {
       return { outcome: 'known' };
     }
     return { outcome: 'welcome-back', person: await personById(deps, identityId) };
