@@ -114,7 +114,7 @@ test('without guide entries the /help line joins the welcome', async () => {
   assert.equal(sends.length, 2);
 });
 
-test('bot re-adds after a suspension never welcome, and bot additions of strangers are skipped', async () => {
+test('bot re-adds after a suspension never welcome; a newcomer the bot let in (an approved request) is welcomed', async () => {
   const { h, hooks, groups } = community();
   join(groups, 'parent@g.us', rui);
   await hooks.onParticipantChange(event(h, 'join', 'parent@g.us', rui));
@@ -123,8 +123,11 @@ test('bot re-adds after a suspension never welcome, and bot additions of strange
   join(groups, 'parent@g.us', rui);
   h.setNow(new Date('2027-06-01T12:00:00Z'));
   assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'add', 'parent@g.us', rui, { actor: h.bot }))), []);
+  // Approval on, only the bot as admin: the newcomer's arrival is performed by the bot.
   join(groups, 'event@g.us', zoe);
-  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'add', 'event@g.us', zoe, { actor: h.bot }))), []);
+  const welcomed = texts(await hooks.onParticipantChange(event(h, 'join', 'event@g.us', zoe, { actor: h.bot })));
+  assert.match(welcomed[0], /^Welcome to Climbers, Zoe!/u);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'event@g.us', zoe, { actor: h.bot }))), [], 'once');
 });
 
 test('a voluntary leave of the whole scope gets a short welcome back only after the absence', async () => {

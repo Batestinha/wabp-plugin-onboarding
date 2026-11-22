@@ -192,7 +192,7 @@ export type ArrivalOutcome = 'onboarded' | 'existing' | 'known' | 'welcome-back'
 
 /**
  * Decides one arrival. Onboarding happens only on a person's first arrival in the scope: never again in
- * another group of the same scope, never for people already in the scope, and never for re-adds by the bot.
+ * another group of the same scope, never for people already in the scope, and never for re-adds by the bot (they already have a row).
  */
 export async function decideArrival(deps: OnboardingDeps, input: {
   db: PluginDatabase;
@@ -214,7 +214,10 @@ export async function decideArrival(deps: OnboardingDeps, input: {
     }
     return { outcome: 'welcome-back', person: await personById(deps, identityId) };
   }
-  if (input.byBot) return { outcome: 'skipped' };
+  // Who let them in doesn't matter for a first arrival: with join approval on and only the bot as admin,
+  // every newcomer arrives through the bot's approval, and whatsmeow reports approvals, invite joins and
+  // direct adds alike as 'join' by the acting admin. Bot re-adds of known people stay silent above (they
+  // have a row), and people added along with existing members are caught by the other-group check below.
   const person = await personById(deps, identityId);
   if (!person) return { outcome: 'skipped' };
   if (await inOtherScopeGroup(deps, scopeId, person, input.groupWid, config)) {
