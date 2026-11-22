@@ -8,7 +8,7 @@
   },
   "description": "Welcome people once, on their first arrival in a community or group: rules, a guide built from /help, and an optional account invitation.",
   "kind": "managed_group",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "coreApiRange": "^0.3.25",
   "entrypoint": "dist/index.js",
   "messageNamespace": "official.onboarding",
@@ -229,7 +229,8 @@
           "max": 2000
         },
         "ui": {
-          "widget": "textarea",
+          "widget": "text",
+          "multiline": true,
           "helpText": "Private welcome. Empty uses the built-in text. Use {name} and {scope}."
         }
       },
@@ -246,7 +247,8 @@
           "max": 4000
         },
         "ui": {
-          "widget": "textarea",
+          "widget": "text",
+          "multiline": true,
           "helpText": "Shown in the welcome and with /rules. Empty: no rules."
         }
       },
@@ -351,7 +353,8 @@
           "max": 2000
         },
         "ui": {
-          "widget": "textarea",
+          "widget": "text",
+          "multiline": true,
           "helpText": "For example how and where to create an account. Use {name} and {scope}."
         }
       },
@@ -384,7 +387,8 @@
           "max": 2000
         },
         "ui": {
-          "widget": "textarea",
+          "widget": "text",
+          "multiline": true,
           "helpText": "Opening of the one-time late welcome for people who were already here. Empty uses the built-in text. Use {name} and {scope}."
         }
       },
@@ -488,7 +492,8 @@
           "max": 1000
         },
         "ui": {
-          "widget": "textarea",
+          "widget": "text",
+          "multiline": true,
           "helpText": "Empty uses the built-in text. Use {name} and {scope}."
         }
       },

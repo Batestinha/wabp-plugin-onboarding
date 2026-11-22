@@ -12,7 +12,8 @@ function control(section: string, path: string, label: string, description: stri
   return { id: `plugin.${ONBOARDING_PLUGIN_ID}.${path}`, path, label, description, section, order, schema, ui: { widget, helpText: description } };
 }
 const toggle = (s: string, p: string, l: string, d: string) => control(s, p, l, d, { type: 'boolean' }, 'toggle');
-const text = (s: string, p: string, l: string, d: string, max: number) => control(s, p, l, d, { type: 'string', max }, 'textarea');
+const text = (s: string, p: string, l: string, d: string, max: number) =>
+  ({ ...control(s, p, l, d, { type: 'string', max }, 'text'), ui: { widget: 'text', multiline: true, helpText: d } });
 const number = (s: string, p: string, l: string, d: string, min: number, max: number, unit?: string) =>
   control(s, p, l, d, { type: 'number', min, max, ...(unit ? { unit } : {}) }, 'number');
 const tags = (s: string, p: string, l: string, d: string) => control(s, p, l, d, { type: 'array', items: { type: 'string' } }, 'tags');
