@@ -14,6 +14,8 @@ export interface OnboardingDeps {
   configFor?: ((scopeId: string, actorIdentityId?: string | undefined) => Promise<Record<string, unknown>>) | undefined;
   databases?: PluginDatabaseRegistry | undefined;
   coveredGroupsForScope?: ((scopeId: string) => Promise<PluginCoveredGroup[]>) | undefined;
+  communityGroupWidForScope?: ((scopeId: string) => Promise<string | undefined>) | undefined;
+  communityAnnouncementGroupWidForScope?: ((scopeId: string) => Promise<string | undefined>) | undefined;
   currentMemberIdentityIdsForScope?: ((scopeId: string) => Promise<string[]>) | undefined;
   getGroupParticipants?: ((groupWid: string) => Promise<GroupParticipant[]>) | undefined;
   resolveIdentityAddress?: ((wid: string) => Promise<StableIdentityAddressResolution>) | undefined;
@@ -101,9 +103,22 @@ export async function ensureSeeded(deps: OnboardingDeps, db: PluginDatabase, sco
 }
 
 /** Whether the person is in any covered group of the scope other than `exceptGroupWid`. */
+/**
+ * The community's own group and its announcement group. WhatsApp puts everyone who joins any subgroup into
+ * both, at the same moment, so membership there says nothing about having been here before.
+ */
+export async function mirrorGroupWids(deps: OnboardingDeps, scopeId: string): Promise<Set<string>> {
+  const wids = await Promise.all([
+    deps.communityGroupWidForScope?.(scopeId).catch(() => undefined),
+    deps.communityAnnouncementGroupWidForScope?.(scopeId).catch(() => undefined)
+  ]);
+  return new Set(wids.filter((wid): wid is string => Boolean(wid)));
+}
+
 export async function inOtherScopeGroup(deps: OnboardingDeps, scopeId: string, person: Person, exceptGroupWid: string, config: OnboardingConfig): Promise<boolean> {
+  const mirrors = await mirrorGroupWids(deps, scopeId);
   const groups = (await deps.coveredGroupsForScope?.(scopeId).catch(() => []) ?? [])
-    .filter((group) => group.groupWid !== exceptGroupWid && !config.exemptGroupChatIds.includes(group.groupWid));
+    .filter((group) => group.groupWid !== exceptGroupWid && !config.exemptGroupChatIds.includes(group.groupWid) && !mirrors.has(group.groupWid));
   for (const group of groups) {
     const participants = await deps.getGroupParticipants?.(group.groupWid).catch(() => []) ?? [];
     if (participants.some((participant) => person.addresses.has(participant.wid))) return true;

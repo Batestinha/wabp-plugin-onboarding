@@ -48,6 +48,45 @@ test('a first arrival in the community is welcomed once, privately, with rules, 
   assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'parent@g.us', rui))), []);
 });
 
+function communityWithMirrors(config) {
+  const groups = [
+    { groupWid: 'parent@g.us', name: 'Climbers', members: [ana] },
+    { groupWid: 'announce@g.us', name: 'Climbers', members: [ana] },
+    { groupWid: 'main@g.us', name: 'Main', members: [ana] },
+    { groupWid: 'event@g.us', name: 'Saturday', members: [] }
+  ];
+  const h = host({ groups, config: { rules: { text: 'Be kind.' }, ...config } });
+  h.context.communityGroupWidForScope = async () => 'parent@g.us';
+  h.context.communityAnnouncementGroupWidForScope = async () => 'announce@g.us';
+  h.remember(rui);
+  return { h, hooks: plugin.registerHooks(h.context), groups };
+}
+
+test('a community newcomer is welcomed although WhatsApp also put them in the community and announcement groups', async () => {
+  const { h, hooks, groups } = communityWithMirrors();
+  // Joining a subgroup makes WhatsApp add Rui to the community and its announcement group at the same moment.
+  join(groups, 'main@g.us', rui); join(groups, 'parent@g.us', rui); join(groups, 'announce@g.us', rui);
+  // The mirror events can arrive first; they decide nothing.
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'add', 'announce@g.us', rui))), []);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'add', 'parent@g.us', rui))), []);
+  const welcome = texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui)));
+  assert.equal(welcome.length, 2);
+  assert.match(welcome[0], /^Welcome to Climbers, Rui!/u);
+  // Once only.
+  join(groups, 'event@g.us', rui);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'event@g.us', rui))), []);
+});
+
+test('leaving every subgroup counts as leaving the community, even while WhatsApp keeps the mirror memberships', async () => {
+  const { h, hooks, groups } = communityWithMirrors({ welcomeBack: { minAbsenceDays: 0 } });
+  join(groups, 'main@g.us', rui); join(groups, 'parent@g.us', rui); join(groups, 'announce@g.us', rui);
+  await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui));
+  leave(groups, 'main@g.us', rui);
+  await hooks.onParticipantChange(event(h, 'leave', 'main@g.us', rui, { actor: rui }));
+  join(groups, 'main@g.us', rui);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui))), ['Welcome back to Climbers, Rui!']);
+});
+
 test('someone already in another group of the scope is not a newcomer', async () => {
   const { h, hooks, groups } = community();
   await hooks.onParticipantChange(event(h, 'join', 'main@g.us', ana)); // seeds the scope

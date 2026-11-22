@@ -7,6 +7,7 @@ import {
   database,
   decideArrival,
   ensureSeeded,
+  mirrorGroupWids,
   onboardingActions,
   recordDeparture,
   welcomeBackActions,
@@ -44,6 +45,8 @@ export async function handleParticipantChange(context: OnboardingDeps, event: Pl
   if (!arrival && !DEPARTURES.has(event.action)) return;
   const config = await configFor(context, event.scopeId);
   if (!config.enabled || config.exemptGroupChatIds.includes(event.groupWid)) return;
+  // Community and announcement groups mirror subgroup membership; the subgroup event decides.
+  if ((await mirrorGroupWids(context, event.scopeId)).has(event.groupWid)) return;
   const db = database(context);
   if (!db) return;
   const bots = new Set(event.botIdentityIds);

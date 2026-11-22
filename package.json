@@ -1,6 +1,6 @@
 {
   "name": "@wabs/plugin-onboarding",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Welcome people once, on their first arrival in a community or group: rules, a guide built from /help, and an optional account invitation.",
   "license": "MIT",
   "private": true,
