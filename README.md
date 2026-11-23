@@ -1,6 +1,6 @@
 # Onboarding & Updates
 
-A WABS plugin for WABP. It welcomes people **once**, the first time they arrive in a scope, whether the scope is a WhatsApp community with sub-groups or standalone groups.
+Welcomes newcomers with group rules and a guide to available commands. Administrators publish editions that members can read with /updates or subscribe to receive privately.
 
 - **Once per person per scope:** joining another group of the same scope (an event sub-group, say) never repeats it, and neither does being added back by the bot, for example after a suspension. Group history is a separate matter: Archive Courier sends it per group.
 - **Private delivery:** a welcome with the rules, a short guide built by the host from the same help data as `/help` (ending with "send /help any time"), and an optional account invitation that is skipped for people whose identity already has a linked sign-in account. If a private message can't be delivered, the welcome falls back to a mention in the group.

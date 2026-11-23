@@ -1,8 +1,8 @@
 {
-  "official.onboarding.description": "Dá as boas-vindas com as regras e um guia e publica novidades em privado para os membros.",
+  "official.onboarding.description": "Dá as boas-vindas aos novos membros com as regras e um guia dos comandos disponíveis. Os administradores publicam edições que os membros podem ler com /updates ou subscrever para receber em privado.",
   "official.onboarding.help.family": "Boas-vindas e novidades",
   "official.onboarding.help.feature.title": "Boas-vindas e novidades",
-  "official.onboarding.help.feature.summary": "Consulta as regras e as novidades publicadas ou subscreve as edições em privado.",
+  "official.onboarding.help.feature.summary": "Consulte as regras do grupo, peça as edições por ler com /updates ou subscreva as novidades desta comunidade para as receber em privado.",
   "official.onboarding.help.rules.title": "Regras do grupo",
   "official.onboarding.help.rules.summary": "Mostra as regras desta comunidade ou grupo.",
   "official.onboarding.help.rules.instruction": "Envia /rules para veres as regras a qualquer momento.",
