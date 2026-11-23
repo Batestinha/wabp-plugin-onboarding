@@ -266,6 +266,7 @@
         },
         "ui": {
           "widget": "builder",
+          "helpText": "Preview the member message and eligible audience before publishing an update.",
           "builderId": "official.onboarding.editions.v1",
           "builderEndpoints": {
             "state": "/api/v1/plugins/official.onboarding/:scopeId/editions",
