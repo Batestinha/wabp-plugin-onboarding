@@ -1,3 +1,4 @@
+import type { PluginDatabase } from '@wabs/plugin-sdk/database';
 import type { PluginAction } from '@wabs/plugin-sdk/actions';
 import type { PluginParticipantChangeEvent, PluginRuntimeHooks } from '@wabs/plugin-sdk/hooks';
 import { runCatchUpBatch } from './catchUp';
@@ -20,6 +21,13 @@ import { observeDraft } from './updateEditions';
 const ARRIVALS = new Set<PluginParticipantChangeEvent['action']>(['join', 'add', 'membership_approved']);
 const DEPARTURES = new Set<PluginParticipantChangeEvent['action']>(['leave', 'remove']);
 
+async function observeSeededGuide(context: OnboardingDeps, db: PluginDatabase, scopeId: string) {
+  // The baseline is a configuration comparison. Membership is refreshed only for real audiences and sends.
+  const viewer = db.get<{ identity_id: string }>(
+    'SELECT identity_id FROM members WHERE scope_id = ? AND left_scope_at IS NULL ORDER BY identity_id LIMIT 1', scopeId);
+  return observeDraft(context, db, scopeId, new Set(viewer ? [viewer.identity_id] : []));
+}
+
 export function createOnboardingHooks(context: OnboardingDeps): PluginRuntimeHooks {
   return {
     async onRuntimeReady(event) {
@@ -31,7 +39,10 @@ export function createOnboardingHooks(context: OnboardingDeps): PluginRuntimeHoo
         if (config.enabled) {
           await ensureSeeded(context, db, scope.scopeId).catch(() => undefined);
           await wakeUpdates(context, scope.scopeId);
-          if (context.newcomerGuideFor && context.memberStandingsForScope) await observeDraft(context, db, scope.scopeId);
+          if (context.newcomerGuideFor) {
+            try { await observeSeededGuide(context, db, scope.scopeId); }
+            catch { await context.enqueuePluginJob?.({ scopeId: scope.scopeId, jobName: 'scope.help.changed', payload: {} }); }
+          }
         }
       }
     },
@@ -42,7 +53,7 @@ export function createOnboardingHooks(context: OnboardingDeps): PluginRuntimeHoo
       if (job.jobName === 'scope.configuration.changed' || job.jobName === 'scope.help.changed') {
         const db = database(context);
         if (db && (await configFor(context, job.scopeId)).enabled) {
-          await observeDraft(context, db, job.scopeId);
+          await observeSeededGuide(context, db, job.scopeId);
           await wakeUpdates(context, job.scopeId);
         }
         return;
