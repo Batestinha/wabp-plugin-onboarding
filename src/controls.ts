@@ -23,7 +23,7 @@ const MESSAGES = 'Messages';
 
 export const onboardingControls: OnboardingControl[] = [
   { ...toggle(GENERAL, 'enabled', 'Enabled', 'Welcome newcomers and manage update editions in this scope.'),
-    ui: { widget: 'builder', builderId: 'official.onboarding.editions.v1', builderEndpoints: {
+    ui: { widget: 'builder', helpText: 'Preview the member message and eligible audience before publishing an update.', builderId: 'official.onboarding.editions.v1', builderEndpoints: {
       state: '/api/v1/plugins/official.onboarding/:scopeId/editions', edit: '/api/v1/plugins/official.onboarding/:scopeId/editions' } } },
   tags(GENERAL, 'exemptGroupChatIds', 'Exempt groups', 'Groups whose arrivals never count as arriving here.'),
   text(MESSAGES, 'welcome.text', 'Welcome', 'Private welcome. Empty uses the built-in text. Use {name} and {scope}.', 2000),
