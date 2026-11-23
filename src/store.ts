@@ -74,6 +74,7 @@ export interface QueueRow {
   delivery_chat_id: string;
   addresses_json: string;
   messages_json: string;
+  welcome_edition: number;
 }
 
 /** People who never had the welcome: recorded when onboarding started, or found already in another group. */
@@ -105,7 +106,7 @@ export function catchUpRow(db: PluginDatabase, scopeId: string): CatchUpRow | un
 
 /** Starts (or restarts) the catch-up with freshly prepared messages; earlier unsent preparations are replaced. */
 export function startCatchUp(db: PluginDatabase, input: {
-  scopeId: string; actorIdentityId: string; now: Date; groups: string[];
+  scopeId: string; actorIdentityId: string; now: Date; groups: string[]; welcomeEdition: number;
   queue: Array<{ identityId: string; deliveryChatId: string; addresses: string[]; messages: string[] }>;
 }): void {
   db.transaction(() => {
@@ -115,9 +116,9 @@ export function startCatchUp(db: PluginDatabase, input: {
     input.scopeId, input.actorIdentityId, input.now.toISOString(), JSON.stringify(input.groups));
     db.run('DELETE FROM catch_up_queue WHERE scope_id = ? AND sent_at IS NULL', input.scopeId);
     for (const item of input.queue) {
-      db.run(`INSERT INTO catch_up_queue (scope_id, identity_id, delivery_chat_id, addresses_json, messages_json, prepared_at)
-        VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (scope_id, identity_id) DO NOTHING`,
-      input.scopeId, item.identityId, item.deliveryChatId, JSON.stringify(item.addresses), JSON.stringify(item.messages), input.now.toISOString());
+      db.run(`INSERT INTO catch_up_queue (scope_id, identity_id, delivery_chat_id, addresses_json, messages_json, prepared_at, welcome_edition)
+        VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (scope_id, identity_id) DO NOTHING`,
+      input.scopeId, item.identityId, item.deliveryChatId, JSON.stringify(item.addresses), JSON.stringify(item.messages), input.now.toISOString(), input.welcomeEdition);
     }
   });
 }

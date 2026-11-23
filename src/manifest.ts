@@ -12,9 +12,12 @@ import {
 } from './constants';
 import { onboardingMessages } from './messages';
 
+import { deliveryService, editionActions, editionConsoleOperations } from './updateOperations';
+import { UPDATE_JOB } from './updateDelivery';
+
 export const onboardingManifest: PluginManifest = {
   pluginId: ONBOARDING_PLUGIN_ID,
-  name: 'Onboarding',
+  name: 'Onboarding & Updates',
   author: { name: 'Batestinha', url: 'https://github.com/Batestinha' },
   kind: 'managed_group',
   version: ONBOARDING_VERSION,
@@ -28,8 +31,13 @@ export const onboardingManifest: PluginManifest = {
     titleKey: `${ns}.help.feature.title`,
     summaryKey: `${ns}.help.feature.summary`,
     order: 15,
-    aliases: ['rules', 'regras', 'welcome', 'boas-vindas', 'onboarding'],
+    aliases: ['Welcome and rules', 'Boas-vindas e regras', 'Onboarding', 'rules', 'regras', 'welcome', 'boas-vindas', 'onboarding'],
     topics: [
+      {
+        topicId: 'scope-updates', titleKey: ns + '.help.updates.title', summaryKey: ns + '.help.cmd.updates',
+        order: 15, commands: ['/updates'], instructionKeys: [ns + '.editions.invitation'], exampleKeys: [ns + '.help.updates.example'],
+        keywords: ['updates', 'novidades'], availability: { invocation: 'either', requiresCurrentManagedGroupMembership: true, currentManagedGroupMembershipMode: 'effective_scope' }
+      },
       {
         topicId: 'group-rules',
         titleKey: `${ns}.help.rules.title`,
@@ -59,24 +67,28 @@ export const onboardingManifest: PluginManifest = {
   requiredBotCapabilities: [],
   configSchema: onboardingConfigSchema,
   dangerousActions: [],
-  backgroundJobs: [CATCH_UP_JOB],
+  backgroundJobs: [CATCH_UP_JOB, UPDATE_JOB, 'scope.configuration.changed', 'scope.help.changed'],
+  services: [deliveryService],
+  externalActions: editionActions,
+  consoleOperations: editionConsoleOperations,
   databases: [{ name: ONBOARDING_DATABASE, engine: 'sqlite', scope: 'account', migrations: 'migrations/onboarding' }],
-  dataVersion: '1',
+  dataVersion: '2',
   dependencies: [],
   cancellation: { workflows: [] },
   assistant: {
     summary: 'Welcomes people once, on their first arrival in a scope (a community or standalone groups): a private welcome with the rules, a guide built from /help, and an optional account invitation.',
     useCases: [
       'Welcome newcomers privately, once per scope, never again when they join another group of it.',
+      'Read published updates with /updates or subscribe with /updates on.',
       'Show the rules with /rules.',
       'Preview the welcome or send it again to someone.',
       'Once, send a paced late welcome to everyone who was here before onboarding started.'
     ],
-    prerequisites: ['enabled=true in the target scope.', 'Groups in ASSIST or MANAGE mode, so the bot may send messages.', 'WABP core API 0.3.25 or later for the guide and the linked-account check.'],
+    prerequisites: ['enabled=true in the target scope.', 'Groups in ASSIST or MANAGE mode, so the bot may send messages.', 'WABP core API 0.3.30 or later for update delivery receipts and member topic IDs.'],
     limitations: [
       'Current members are recorded when it starts and are never welcomed.',
       'People added back by the bot (for example after a suspension) get nothing.',
-      'Group history is sent separately, per group, by Send Group History.'
+      'Group history is sent separately, per group, by Archive Courier.'
     ],
     workflows: [
       { intent: 'onboarding_rules', description: 'Show the rules.', commands: ['/rules'] },

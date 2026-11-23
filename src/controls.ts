@@ -18,11 +18,13 @@ const number = (s: string, p: string, l: string, d: string, min: number, max: nu
   control(s, p, l, d, { type: 'number', min, max, ...(unit ? { unit } : {}) }, 'number');
 const tags = (s: string, p: string, l: string, d: string) => control(s, p, l, d, { type: 'array', items: { type: 'string' } }, 'tags');
 
-const GENERAL = 'Onboarding';
+const GENERAL = 'Onboarding & Updates';
 const MESSAGES = 'Messages';
 
 export const onboardingControls: OnboardingControl[] = [
-  toggle(GENERAL, 'enabled', 'Enabled', 'Welcome people the first time they arrive in this scope. Current members are recorded first and never welcomed.'),
+  { ...toggle(GENERAL, 'enabled', 'Enabled', 'Welcome newcomers and manage update editions in this scope.'),
+    ui: { widget: 'builder', builderId: 'official.onboarding.editions.v1', builderEndpoints: {
+      state: '/api/v1/plugins/official.onboarding/:scopeId/editions', edit: '/api/v1/plugins/official.onboarding/:scopeId/editions' } } },
   tags(GENERAL, 'exemptGroupChatIds', 'Exempt groups', 'Groups whose arrivals never count as arriving here.'),
   text(MESSAGES, 'welcome.text', 'Welcome', 'Private welcome. Empty uses the built-in text. Use {name} and {scope}.', 2000),
   text(MESSAGES, 'rules.text', 'Rules', 'Shown in the welcome and with /rules. Empty: no rules.', 4000),
