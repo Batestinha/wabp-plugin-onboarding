@@ -32,8 +32,9 @@ const metadata = {
   cancellation: m.cancellation,
   dependencies: m.dependencies,
   assistant: m.assistant,
-  externalActions: [],
-  consoleOperations: [],
+  services: m.services,
+  externalActions: m.externalActions,
+  consoleOperations: m.consoleOperations,
   operatorConsole: {
     configPaths: onboardingConfigPaths(),
     controls: onboardingControls.map(c => ({ pluginId: m.pluginId, ...c })),

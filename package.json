@@ -1,7 +1,7 @@
 {
   "name": "@wabs/plugin-onboarding",
-  "version": "0.1.4",
-  "description": "Welcome people once, on their first arrival in a community or group: rules, a guide built from /help, and an optional account invitation.",
+  "version": "0.2.0",
+  "description": "Welcome newcomers with rules and a member guide, and publish private updates for current members.",
   "license": "MIT",
   "private": true,
   "type": "commonjs",
@@ -33,7 +33,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@wabs/plugin-sdk": "file:vendor/wabs-plugin-sdk-0.3.37-c0eaffccb371.tgz",
+    "@wabs/plugin-sdk": "file:vendor/wabs-plugin-sdk-0.3.42-2cdab8dc5c61.tgz",
     "zod": "3.25.76"
   },
   "devDependencies": {

@@ -1,19 +1,20 @@
 {
   "schemaVersion": 2,
   "pluginId": "official.onboarding",
-  "name": "Onboarding",
+  "name": "Onboarding & Updates",
   "author": {
     "name": "Batestinha",
     "url": "https://github.com/Batestinha"
   },
-  "description": "Welcome people once, on their first arrival in a community or group: rules, a guide built from /help, and an optional account invitation.",
+  "description": "Welcome newcomers with rules and a member guide, and publish private updates for current members.",
   "kind": "managed_group",
-  "version": "0.1.3",
-  "coreApiRange": "^0.3.25",
+  "version": "0.2.0",
+  "coreApiRange": "^0.3.30",
   "entrypoint": "dist/index.js",
   "messageNamespace": "official.onboarding",
   "descriptionKey": "official.onboarding.description",
   "commands": [
+    "/updates",
     "/rules",
     "/onboarding preview",
     "/onboarding status",
@@ -26,6 +27,9 @@
     "summaryKey": "official.onboarding.help.feature.summary",
     "order": 15,
     "aliases": [
+      "Welcome and rules",
+      "Boas-vindas e regras",
+      "Onboarding",
       "rules",
       "regras",
       "welcome",
@@ -33,6 +37,30 @@
       "onboarding"
     ],
     "topics": [
+      {
+        "topicId": "scope-updates",
+        "titleKey": "official.onboarding.help.updates.title",
+        "summaryKey": "official.onboarding.help.cmd.updates",
+        "order": 15,
+        "commands": [
+          "/updates"
+        ],
+        "instructionKeys": [
+          "official.onboarding.editions.invitation"
+        ],
+        "exampleKeys": [
+          "official.onboarding.help.updates.example"
+        ],
+        "keywords": [
+          "updates",
+          "novidades"
+        ],
+        "availability": {
+          "invocation": "either",
+          "requiresCurrentManagedGroupMembership": true,
+          "currentManagedGroupMembershipMode": "effective_scope"
+        }
+      },
       {
         "topicId": "group-rules",
         "titleKey": "official.onboarding.help.rules.title",
@@ -97,7 +125,10 @@
   "requiredBotCapabilities": [],
   "dangerousActions": [],
   "backgroundJobs": [
-    "catch-up.batch"
+    "catch-up.batch",
+    "updates.batch",
+    "scope.configuration.changed",
+    "scope.help.changed"
   ],
   "databases": [
     {
@@ -107,7 +138,7 @@
       "migrations": "migrations/onboarding"
     }
   ],
-  "dataVersion": "1",
+  "dataVersion": "2",
   "cancellation": {
     "workflows": []
   },
@@ -116,6 +147,7 @@
     "summary": "Welcomes people once, on their first arrival in a scope (a community or standalone groups): a private welcome with the rules, a guide built from /help, and an optional account invitation.",
     "useCases": [
       "Welcome newcomers privately, once per scope, never again when they join another group of it.",
+      "Read published updates with /updates or subscribe with /updates on.",
       "Show the rules with /rules.",
       "Preview the welcome or send it again to someone.",
       "Once, send a paced late welcome to everyone who was here before onboarding started."
@@ -123,12 +155,12 @@
     "prerequisites": [
       "enabled=true in the target scope.",
       "Groups in ASSIST or MANAGE mode, so the bot may send messages.",
-      "WABP core API 0.3.25 or later for the guide and the linked-account check."
+      "WABP core API 0.3.30 or later for update delivery receipts and member topic IDs."
     ],
     "limitations": [
       "Current members are recorded when it starts and are never welcomed.",
       "People added back by the bot (for example after a suspension) get nothing.",
-      "Group history is sent separately, per group, by Send Group History."
+      "Group history is sent separately, per group, by Archive Courier."
     ],
     "workflows": [
       {
@@ -156,8 +188,48 @@
       }
     ]
   },
-  "externalActions": [],
-  "consoleOperations": [],
+  "services": [
+    {
+      "serviceId": "official.onboarding.delivery.v1",
+      "methods": [
+        {
+          "name": "allowDelivery",
+          "access": "read",
+          "timeoutMs": 60000
+        }
+      ]
+    }
+  ],
+  "externalActions": [
+    {
+      "actionId": "official.onboarding.editionState",
+      "access": "read",
+      "description": "Preview the current edition and eligible subscriber count",
+      "scope": "scope",
+      "timeoutMs": 60000
+    },
+    {
+      "actionId": "official.onboarding.editEdition",
+      "access": "mutation",
+      "description": "Save, dismiss or publish the reviewed edition",
+      "scope": "scope",
+      "timeoutMs": 60000
+    }
+  ],
+  "consoleOperations": [
+    {
+      "operationId": "official.onboarding.editionState",
+      "access": "read",
+      "authorization": "operator",
+      "description": "Preview the current edition and eligible subscriber count"
+    },
+    {
+      "operationId": "official.onboarding.editEdition",
+      "access": "mutation",
+      "authorization": "operator",
+      "description": "Save, dismiss or publish the reviewed edition"
+    }
+  ],
   "operatorConsole": {
     "configPaths": [
       "enabled",
@@ -186,15 +258,19 @@
         "id": "plugin.official.onboarding.enabled",
         "path": "enabled",
         "label": "Enabled",
-        "description": "Welcome people the first time they arrive in this scope. Current members are recorded first and never welcomed.",
-        "section": "Onboarding",
+        "description": "Welcome newcomers and manage update editions in this scope.",
+        "section": "Onboarding & Updates",
         "order": 10,
         "schema": {
           "type": "boolean"
         },
         "ui": {
-          "widget": "toggle",
-          "helpText": "Welcome people the first time they arrive in this scope. Current members are recorded first and never welcomed."
+          "widget": "builder",
+          "builderId": "official.onboarding.editions.v1",
+          "builderEndpoints": {
+            "state": "/api/v1/plugins/official.onboarding/:scopeId/editions",
+            "edit": "/api/v1/plugins/official.onboarding/:scopeId/editions"
+          }
         }
       },
       {
@@ -203,7 +279,7 @@
         "path": "exemptGroupChatIds",
         "label": "Exempt groups",
         "description": "Groups whose arrivals never count as arriving here.",
-        "section": "Onboarding",
+        "section": "Onboarding & Updates",
         "order": 20,
         "schema": {
           "type": "array",
@@ -398,7 +474,7 @@
         "path": "catchUp.batchSize",
         "label": "Late welcomes per batch",
         "description": "People who get the late welcome in each batch.",
-        "section": "Onboarding",
+        "section": "Onboarding & Updates",
         "order": 130,
         "schema": {
           "type": "number",
@@ -416,7 +492,7 @@
         "path": "catchUp.intervalMinutes",
         "label": "Minutes between batches",
         "description": "Pause between late-welcome batches, so the bot never sends a burst.",
-        "section": "Onboarding",
+        "section": "Onboarding & Updates",
         "order": 140,
         "schema": {
           "type": "number",
@@ -435,7 +511,7 @@
         "path": "catchUp.sendFrom",
         "label": "Late welcomes from",
         "description": "Earliest local time (HH:MM) for late welcomes.",
-        "section": "Onboarding",
+        "section": "Onboarding & Updates",
         "order": 150,
         "schema": {
           "type": "string",
@@ -452,7 +528,7 @@
         "path": "catchUp.sendUntil",
         "label": "Late welcomes until",
         "description": "Latest local time (HH:MM) for late welcomes.",
-        "section": "Onboarding",
+        "section": "Onboarding & Updates",
         "order": 160,
         "schema": {
           "type": "string",

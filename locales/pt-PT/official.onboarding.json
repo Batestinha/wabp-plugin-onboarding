@@ -1,8 +1,8 @@
 {
-  "official.onboarding.description": "Dá as boas-vindas às pessoas na primeira vez que chegam: regras, um guia curto do que podem fazer e um convite opcional para criar conta.",
-  "official.onboarding.help.family": "Boas-vindas",
-  "official.onboarding.help.feature.title": "Boas-vindas e regras",
-  "official.onboarding.help.feature.summary": "Vê as regras do grupo e o que os recém-chegados recebem.",
+  "official.onboarding.description": "Dá as boas-vindas com as regras e um guia e publica novidades em privado para os membros.",
+  "official.onboarding.help.family": "Boas-vindas e novidades",
+  "official.onboarding.help.feature.title": "Boas-vindas e novidades",
+  "official.onboarding.help.feature.summary": "Consulta as regras e as novidades publicadas ou subscreve as edições em privado.",
   "official.onboarding.help.rules.title": "Regras do grupo",
   "official.onboarding.help.rules.summary": "Mostra as regras desta comunidade ou grupo.",
   "official.onboarding.help.rules.instruction": "Envia /rules para veres as regras a qualquer momento.",
@@ -39,5 +39,18 @@
   "official.onboarding.catchUp.progress": "Boas-vindas atrasadas: {sent} enviadas, {skipped} saltadas, {left} por enviar.",
   "official.onboarding.catchUp.stopped": "Parado depois de {sent} boas-vindas atrasadas; {left} não enviadas. Correr outra vez só envia a quem não as recebeu.",
   "official.onboarding.catchUp.notRunning": "Não há boas-vindas atrasadas a serem enviadas agora.",
-  "official.onboarding.catchUp.finished": "Boas-vindas atrasadas concluídas: {sent} enviadas, {skipped} saltadas (saíram dos grupos, suspensos ou expulsos)."
+  "official.onboarding.catchUp.finished": "Boas-vindas atrasadas concluídas: {sent} enviadas, {skipped} saltadas (saíram dos grupos, suspensos ou expulsos).",
+  "official.onboarding.help.updates.title": "Novidades da comunidade",
+  "official.onboarding.help.updates.example": "/updates on",
+  "official.onboarding.help.cmd.updates": "Lê as novas edições ou altera a subscrição de novidades em privado.",
+  "official.onboarding.editions.invitation": "Envia /updates para leres o que mudou. Usa /updates on para receberes novidades em privado ou /updates off para as deixares de receber.",
+  "official.onboarding.editions.rules": "As regras mudaram. Consulta as regras atuais com /rules.",
+  "official.onboarding.editions.added": "Novidades em /help: {topics}",
+  "official.onboarding.editions.removed": "Removidos de /help: {topics}",
+  "official.onboarding.editions.message": "{scope} · Edição {edition}\n\n{body}",
+  "official.onboarding.editions.ineligible": "As novidades estão disponíveis para membros atuais sem suspensão ou expulsão.",
+  "official.onboarding.editions.on": "Subscreveste as novidades em privado. Envia /updates off para as deixares de receber.",
+  "official.onboarding.editions.off": "A subscrição de novidades em privado está desativada. Envia /updates on para a ativares.",
+  "official.onboarding.editions.queued": "Tens {count} edição(ões) por ler. Vou enviá-las em privado.",
+  "official.onboarding.editions.current": "Já leste todas as novidades."
 }

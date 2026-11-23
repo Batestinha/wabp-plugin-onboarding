@@ -7,6 +7,7 @@ const { onboardingMessages } = require('../dist/messages');
 function openDatabase() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'onboarding-'));
   const sqlite = new DatabaseSync(path.join(dir, 'onboarding.sqlite'));
+  process.once('exit', () => { if (sqlite.isOpen) sqlite.close(); fs.rmSync(dir, { recursive: true, force: true }); });
   const migrations = path.join(__dirname, '../migrations/onboarding');
   for (const file of fs.readdirSync(migrations).sort()) sqlite.exec(fs.readFileSync(path.join(migrations, file), 'utf8'));
   const db = {

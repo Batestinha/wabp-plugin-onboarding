@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const plugin = require('../dist').default;
-const { host, person, event } = require('./helpers.cjs');
+const { host, person, event, t } = require('./helpers.cjs');
 
 const ana = person('Ana', '351910000001');
 const rui = person('Rui', '351910000002');
@@ -84,7 +84,7 @@ test('leaving every subgroup counts as leaving the community, even while WhatsAp
   leave(groups, 'main@g.us', rui);
   await hooks.onParticipantChange(event(h, 'leave', 'main@g.us', rui, { actor: rui }));
   join(groups, 'main@g.us', rui);
-  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui))), ['Welcome back to Climbers, Rui!']);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui))), ['Welcome back to Climbers, Rui!\n\n' + t('official.onboarding.editions.invitation')]);
 });
 
 test('a returning member whose join request the bot approved gets the welcome back', async () => {
@@ -94,7 +94,7 @@ test('a returning member whose join request the bot approved gets the welcome ba
   leave(groups, 'main@g.us', rui);
   await hooks.onParticipantChange(event(h, 'leave', 'main@g.us', rui, { actor: rui }));
   join(groups, 'main@g.us', rui);
-  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui, { actor: h.bot }))), ['Welcome back to Climbers, Rui!']);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'main@g.us', rui, { actor: h.bot }))), ['Welcome back to Climbers, Rui!\n\n' + t('official.onboarding.editions.invitation')]);
 });
 
 test('someone already in another group of the scope is not a newcomer', async () => {
@@ -153,7 +153,7 @@ test('a voluntary leave of the whole scope gets a short welcome back only after 
   await hooks.onParticipantChange(event(h, 'leave', 'parent@g.us', rui, { actor: rui }));
   h.setNow(new Date('2027-01-15T12:00:00Z'));
   join(groups, 'parent@g.us', rui);
-  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'parent@g.us', rui))), ['Welcome back to Climbers, Rui!']);
+  assert.deepEqual(texts(await hooks.onParticipantChange(event(h, 'join', 'parent@g.us', rui))), ['Welcome back to Climbers, Rui!\n\n' + t('official.onboarding.editions.invitation')]);
 });
 
 test('leaving one sub-group is not leaving the scope', async () => {

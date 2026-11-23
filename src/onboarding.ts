@@ -11,6 +11,9 @@ import { clearLeft, insertMember, isSeeded, markLeft, memberRow, seedScope } fro
 
 /** Host capabilities used here; hooks and commands each provide them. */
 export interface OnboardingDeps {
+  memberScopeFor?: import('@wabs/plugin-sdk/hook-plugin').PluginMemberScopeFor | undefined;
+  enqueuePluginJob?: import('@wabs/plugin-sdk/jobs').PluginJobContext['enqueuePluginJob'];
+  privateTextReceipt?: import('@wabs/plugin-sdk/managed-group-plugin').ManagedGroupCapabilities['privateTextReceipt'];
   configFor?: ((scopeId: string, actorIdentityId?: string | undefined) => Promise<Record<string, unknown>>) | undefined;
   databases?: PluginDatabaseRegistry | undefined;
   coveredGroupsForScope?: ((scopeId: string) => Promise<PluginCoveredGroup[]>) | undefined;
@@ -161,7 +164,7 @@ export async function onboardingActions(deps: OnboardingDeps, input: {
       excludeFamilies: config.guide.excludeFamilies
     }).catch(() => []);
   }
-  const first = [welcome, ...(rules ? [`${t(`${ns}.rules.header`)}\n${rules}`] : []), ...(guide.length ? [] : [t(`${ns}.guide.footer`)])].join('\n\n');
+  const first = [welcome, t(ns + '.editions.invitation'), ...(rules ? [`${t(`${ns}.rules.header`)}\n${rules}`] : []), ...(guide.length ? [] : [t(`${ns}.guide.footer`)])].join('\n\n');
   const actions: PluginAction[] = [{
     type: 'message.sendText',
     chatId: person.deliveryChatId,
@@ -185,7 +188,7 @@ export async function welcomeBackActions(deps: OnboardingDeps, config: Onboardin
   const t = await translatorFor(deps, person.identityId, scopeId);
   const values = { name: person.name, scope: await scopeName(deps, scopeId) };
   return [{ type: 'message.sendText', chatId: person.deliveryChatId,
-    text: fill(config.welcomeBack.text.trim() || t(`${ns}.welcomeBack.default`, values), values) }];
+    text: [fill(config.welcomeBack.text.trim() || t(`${ns}.welcomeBack.default`, values), values), t(ns + '.editions.invitation')].join('\n\n') }];
 }
 
 export type ArrivalOutcome = 'onboarded' | 'existing' | 'known' | 'welcome-back' | 'skipped';

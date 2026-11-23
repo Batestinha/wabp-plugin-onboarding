@@ -1,6 +1,7 @@
 import type { PluginAction } from '@wabs/plugin-sdk/actions';
 import type { PluginDatabase } from '@wabs/plugin-sdk/database';
 import type { OnboardingConfig } from './config';
+import { markWelcomeCoverage } from './updateDelivery';
 import { CATCH_UP_JOB, ONBOARDING_NAMESPACE as ns, ONBOARDING_PLUGIN_ID } from './constants';
 import { configFor, database, nowFrom, onboardingActions, personById, translatorForPerson, type OnboardingDeps } from './onboarding';
 import {
@@ -74,6 +75,8 @@ export async function catchUpCandidates(deps: OnboardingDeps, db: PluginDatabase
 export async function prepareCatchUp(deps: OnboardingDeps, input: {
   db: PluginDatabase; config: OnboardingConfig; scopeId: string; actorIdentityId: string; identityIds: string[];
 }): Promise<{ prepared: number; actions: PluginAction[] }> {
+  const editionScope = (await deps.memberScopeFor?.(input.scopeId))?.id ?? input.scopeId;
+  const welcomeEdition = input.db.get<{edition: number}>('SELECT MAX(edition) AS edition FROM update_editions WHERE scope_id = ?', editionScope)?.edition ?? 0;
   const queue: Array<{ identityId: string; deliveryChatId: string; addresses: string[]; messages: string[] }> = [];
   for (const identityId of input.identityIds) {
     const person = await personById(deps, identityId);
@@ -85,7 +88,7 @@ export async function prepareCatchUp(deps: OnboardingDeps, input: {
   const groups = (await deps.coveredGroupsForScope?.(input.scopeId).catch(() => []) ?? [])
     .map((group) => group.groupWid).filter((groupWid) => !input.config.exemptGroupChatIds.includes(groupWid));
   const now = nowFrom(deps);
-  startCatchUp(input.db, { scopeId: input.scopeId, actorIdentityId: input.actorIdentityId, now, groups, queue });
+  startCatchUp(input.db, { scopeId: input.scopeId, actorIdentityId: input.actorIdentityId, now, groups, queue, welcomeEdition });
   return {
     prepared: queue.length,
     actions: [
@@ -136,7 +139,10 @@ export async function runCatchUpBatch(deps: OnboardingDeps, scopeId: string): Pr
         continue;
       }
       markQueuedSent(db, scopeId, row.identity_id, now);
-      for (const text of JSON.parse(row.messages_json) as string[]) actions.push({ type: 'message.sendText', chatId: row.delivery_chat_id, text });
+      const welcome = (JSON.parse(row.messages_json) as string[]).map((text): PluginAction => ({ type: 'message.sendText', chatId: row.delivery_chat_id, text }));
+      const editionScope = (await deps.memberScopeFor?.(scopeId))?.id ?? scopeId;
+      markWelcomeCoverage(db, editionScope, row.identity_id, welcome[0], scopeId, row.welcome_edition);
+      actions.push(...welcome);
       sent += 1;
     }
   }

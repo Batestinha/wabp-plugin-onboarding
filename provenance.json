@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "sourceRepository": "https://github.com/Batestinha/wabp-plugin-onboarding",
   "sdk": {
-    "version": "0.3.37",
-    "path": "vendor/wabs-plugin-sdk-0.3.37-c0eaffccb371.tgz",
-    "sha256": "c0eaffccb37173a7a077f76a2bc80f0d2a3cd5bf93817909a11718a2274191d4",
+    "version": "0.3.42",
+    "path": "vendor/wabs-plugin-sdk-0.3.42-2cdab8dc5c61.tgz",
+    "sha256": "2cdab8dc5c614fde36d79b98bda9a78f125df5c353b5dc268b97f658aef65c9a",
     "sourceRepository": "https://github.com/Batestinha/wabp",
     "sourceDirectory": "packages/plugin-sdk",
-    "sourceCommit": "7c9540f4"
+    "sourceCommit": "365870eacfa4199aca44b6585e8f13efad6af2e5"
   },
   "supersedes": {
     "pluginId": "official.onboarding-rules",

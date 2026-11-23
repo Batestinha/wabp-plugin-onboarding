@@ -14,6 +14,9 @@ import {
   type OnboardingDeps
 } from './onboarding';
 
+import { markWelcomeCoverage, runUpdateBatch, UPDATE_JOB, wakeUpdates } from './updateDelivery';
+import { observeDraft } from './updateEditions';
+
 const ARRIVALS = new Set<PluginParticipantChangeEvent['action']>(['join', 'add', 'membership_approved']);
 const DEPARTURES = new Set<PluginParticipantChangeEvent['action']>(['leave', 'remove']);
 
@@ -25,13 +28,26 @@ export function createOnboardingHooks(context: OnboardingDeps): PluginRuntimeHoo
       if (!db) return;
       for (const scope of await context.listEnabledScopes?.() ?? []) {
         const config = await configFor(context, scope.scopeId);
-        if (config.enabled) await ensureSeeded(context, db, scope.scopeId).catch(() => undefined);
+        if (config.enabled) {
+          await ensureSeeded(context, db, scope.scopeId).catch(() => undefined);
+          await wakeUpdates(context, scope.scopeId);
+          if (context.newcomerGuideFor && context.memberStandingsForScope) await observeDraft(context, db, scope.scopeId);
+        }
       }
     },
     async onParticipantChange(event) {
       return handleParticipantChange(context, event);
     },
     async onPluginJob(job) {
+      if (job.jobName === 'scope.configuration.changed' || job.jobName === 'scope.help.changed') {
+        const db = database(context);
+        if (db && (await configFor(context, job.scopeId)).enabled) {
+          await observeDraft(context, db, job.scopeId);
+          await wakeUpdates(context, job.scopeId);
+        }
+        return;
+      }
+      if (job.jobName === UPDATE_JOB) return runUpdateBatch(context, job.scopeId);
       if (job.jobName !== CATCH_UP_JOB) return;
       const scopeId = (job.payload as { scopeId?: unknown } | undefined)?.scopeId;
       return runCatchUpBatch(context, typeof scopeId === 'string' ? scopeId : job.scopeId);
@@ -69,10 +85,13 @@ export async function handleParticipantChange(context: OnboardingDeps, event: Pl
     const decision = await decideArrival(context, { db, config, scopeId: event.scopeId, groupWid: event.groupWid, identityId: identity.identityId, byBot });
     if (decision.outcome === 'onboarded' && decision.person) {
       actions.push({ type: 'audit.record', action: 'onboarding.welcomed', targetJson: { scopeId: event.scopeId, identityId: identity.identityId, groupWid: event.groupWid } });
-      actions.push(...await onboardingActions(context, {
+      const welcome = await onboardingActions(context, {
         config, scopeId: event.scopeId, person: decision.person,
         groupId: event.groupId, groupWid: event.groupWid, fallbackGroupWid: event.groupWid
-      }));
+      });
+      const editionScope = (await context.memberScopeFor?.(event.scopeId))?.id ?? event.scopeId;
+      markWelcomeCoverage(db, editionScope, identity.identityId, welcome[0], event.scopeId);
+      actions.push(...welcome);
     } else if (decision.outcome === 'welcome-back' && decision.person) {
       actions.push({ type: 'audit.record', action: 'onboarding.welcomed-back', targetJson: { scopeId: event.scopeId, identityId: identity.identityId, groupWid: event.groupWid } });
       actions.push(...await welcomeBackActions(context, config, event.scopeId, decision.person));

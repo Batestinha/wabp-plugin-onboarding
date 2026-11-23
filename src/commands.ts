@@ -6,6 +6,9 @@ import { catchUpCandidates, estimatedHours, prepareCatchUp } from './catchUp';
 import { configFor, database, ensureSeeded, onboardingActions, personById, personByWid, type OnboardingDeps } from './onboarding';
 import { catchUpRow, queuedCount, setCatchUpStatus, statusCounts } from './store';
 
+import { eligibleMembers } from './updateEditions';
+import { requestUpdates, setSubscription, subscribed, wakeUpdates } from './updateDelivery';
+
 type Deps = OnboardingDeps;
 
 const CHAT_FLAG_TARGET: CommandTargetSpec = { kind: 'group', name: 'chat', flag: 'chat' };
@@ -29,7 +32,7 @@ function metadata(subcommand: string, topicId: string, input: { permission?: str
       topicId,
       descriptionKey: `${ns}.help.cmd.${subcommand}`,
       usage: input.usage,
-      exampleKeys: [topicId === 'group-rules' ? `${ns}.help.rules.example` : `${ns}.help.manage.example`]
+      exampleKeys: [topicId === 'scope-updates' ? ns + '.help.updates.example' : topicId === 'group-rules' ? `${ns}.help.rules.example` : `${ns}.help.manage.example`]
     }
   };
 }
@@ -45,6 +48,24 @@ function scopeOf(ctx: CommandContext): string | undefined {
 export function registerOnboardingCommands(context: ManagedGroupCommandContext): void {
   const deps = context as unknown as Deps;
   const router = context.router;
+
+  router.register('updates', '*', metadata('updates', 'scope-updates', { mutation: 'durable', usage: '/updates [on|off]' }), async ctx => {
+    const selected = scopeOf(ctx);
+    const scopeId = selected && (await deps.memberScopeFor?.(selected))?.id || selected;
+    const actor = ctx.actor?.identityAddress;
+    const db = database(deps);
+    if (!scopeId || !actor || !db || !(await configFor(deps, scopeId)).enabled) return reply(ctx.t(ns + '.disabled'));
+    const respond = (text: string): CommandResult => ({ handled: true, response: { kind: 'text', chatId: actor.deliveryChatId, disablePrivateDeliveryFallback: true, text } });
+    if (!(await eligibleMembers(deps, scopeId)).has(actor.identityId)) return respond(ctx.t(ns + '.editions.ineligible'));
+    const args = ctx.remainingArgs ?? ctx.command.rawArgs.trim().split(/\s+/u).filter(Boolean);
+    const verb = args[0]?.toLowerCase();
+    if (args.length > 1 || (verb && verb !== 'on' && verb !== 'off')) return respond(ctx.t(ns + '.editions.invitation'));
+    if (verb) setSubscription(db, scopeId, actor.identityId, verb === 'on');
+    const count = verb ? 0 : await requestUpdates(deps, db, scopeId, actor.identityId);
+    if (count) await wakeUpdates(deps, scopeId);
+    const preference = ctx.t(ns + (subscribed(db, scopeId, actor.identityId) ? '.editions.on' : '.editions.off'));
+    return respond(verb ? preference : [ctx.t(ns + (count ? '.editions.queued' : '.editions.current'), { count }), preference].join('\n\n'));
+  });
 
   router.register('rules', '*', metadata('rules', 'group-rules', { mutation: 'none', usage: '/rules' }), async (ctx) => {
     const scopeId = scopeOf(ctx);
