@@ -10,7 +10,7 @@ export const UPDATE_JOB = 'updates.batch';
 type Delivery = { edition: number; identity_id: string; requested: number; attempt: number; status: string; checked_at: number; body: string };
 const deliveries = 'SELECT d.*, e.body FROM update_deliveries d JOIN update_editions e USING(scope_id, edition) ';
 const deliveryKey = (row: Delivery) => 'edition/' + row.edition + '/' + row.identity_id + '/' + row.attempt;
-const welcomeKey = (id: string) => 'edition-welcome/' + id;
+const welcomeKey = (id: string, edition: number) => 'edition-welcome/' + id + '/' + edition;
 const hasWork = (db: PluginDatabase, scopeId: string) => Boolean(db.get(
   "SELECT 1 AS pending FROM update_deliveries WHERE scope_id = ? AND status IN ('ready','waiting') LIMIT 1", scopeId));
 
@@ -34,17 +34,20 @@ export function markWelcomeCoverage(db: PluginDatabase, scopeId: string, identit
   const latest = coveredEdition ?? db.get<{edition: number}>('SELECT MAX(edition) AS edition FROM update_editions WHERE scope_id = ?', scopeId)?.edition;
   if (!latest) return;
   db.run(`INSERT INTO update_members(scope_id, identity_id, welcome_pending, welcome_receipt_scope) VALUES (?, ?, ?, ?)
-    ON CONFLICT(scope_id, identity_id) DO UPDATE SET welcome_pending = excluded.welcome_pending, welcome_receipt_scope = excluded.welcome_receipt_scope`, scopeId, identityId, latest, sendingScope);
-  first.idempotencyKey = welcomeKey(identityId);
+    ON CONFLICT(scope_id, identity_id) DO UPDATE SET welcome_pending = excluded.welcome_pending, welcome_receipt_scope = excluded.welcome_receipt_scope
+      WHERE excluded.welcome_pending >= welcome_pending AND excluded.welcome_pending > welcome_floor`, scopeId, identityId, latest, sendingScope);
+  first.idempotencyKey = welcomeKey(identityId, latest);
 }
 
 async function welcomeFloor(deps: OnboardingDeps, db: PluginDatabase, scopeId: string, identityId: string) {
   const row = db.get<{welcome_pending: number; welcome_floor: number; welcome_receipt_scope: string}>(
     'SELECT welcome_pending, welcome_floor, welcome_receipt_scope FROM update_members WHERE scope_id = ? AND identity_id = ?', scopeId, identityId);
   if (!row?.welcome_pending) return row?.welcome_floor ?? 0;
-  if (await deps.privateTextReceipt?.(row.welcome_receipt_scope || scopeId, welcomeKey(identityId)) === 'SENT') {
-    db.run('UPDATE update_members SET welcome_floor = welcome_pending, welcome_pending = 0 WHERE scope_id = ? AND identity_id = ?', scopeId, identityId);
-    return row.welcome_pending;
+  if (await deps.privateTextReceipt?.(row.welcome_receipt_scope || scopeId, welcomeKey(identityId, row.welcome_pending)) === 'SENT') {
+    db.run(`UPDATE update_members SET welcome_floor = MAX(welcome_floor, ?),
+      welcome_pending = CASE WHEN welcome_pending = ? AND welcome_receipt_scope = ? THEN 0 ELSE welcome_pending END
+      WHERE scope_id = ? AND identity_id = ?`, row.welcome_pending, row.welcome_pending, row.welcome_receipt_scope, scopeId, identityId);
+    return Math.max(row.welcome_floor, row.welcome_pending);
   }
   return row.welcome_floor;
 }
@@ -69,6 +72,7 @@ export async function allowedUpdate(deps: OnboardingDeps, scopeId: string, input
   const row = db.get<Delivery>(deliveries + 'WHERE scope_id = ? AND edition = ? AND identity_id = ? AND attempt = ?',
     scopeId, input.edition, input.identityId, input.attempt);
   if (!row || !['waiting', 'ready'].includes(row.status) || !(await eligibleMembers(deps, scopeId)).has(input.identityId)) return false;
+  if (input.edition <= await welcomeFloor(deps, db, scopeId, input.identityId)) return false;
   if (!deps.resolveIdentityAddress) throw new Error('Recipient identity resolution is unavailable.');
   if ((await deps.resolveIdentityAddress(input.recipient)).identityId !== input.identityId) return false;
   return Boolean(row.requested) || subscribed(db, scopeId, input.identityId);

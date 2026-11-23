@@ -87,6 +87,8 @@ export async function translatorForPerson(deps: OnboardingDeps, identityId: stri
 }
 
 export async function scopeName(deps: OnboardingDeps, scopeId: string): Promise<string> {
+  const owner = await deps.memberScopeFor?.(scopeId);
+  if (owner?.id === scopeId && owner.name.trim()) return owner.name;
   const scopes = await deps.listEnabledScopes?.().catch(() => []) ?? [];
   return scopes.find((scope) => scope.scopeId === scopeId)?.name?.trim() || scopeId;
 }
