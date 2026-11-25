@@ -1,3 +1,4 @@
+import { withMessageSlot } from './messageSlot';
 import type { CommandMetadata, CommandTargetSpec } from '@wabs/plugin-sdk/command-metadata';
 import type { CommandContext, CommandResult } from '@wabs/plugin-sdk/commands';
 import type { ManagedGroupCommandContext } from '@wabs/plugin-sdk/managed-group-plugin';
@@ -37,8 +38,19 @@ function metadata(subcommand: string, topicId: string, input: { permission?: str
   };
 }
 
-function reply(text: string, pluginActions: CommandResult['pluginActions'] = []): CommandResult {
-  return { handled: true, text, ...(pluginActions && pluginActions.length ? { pluginActions } : {}) };
+function reply(
+  text: string,
+  pluginActions: NonNullable<CommandResult['pluginActions']> | ReturnType<typeof withMessageSlot> = [],
+  slot?: ReturnType<typeof withMessageSlot>
+): CommandResult {
+  const actions = Array.isArray(pluginActions) ? pluginActions : [];
+  const attached = Array.isArray(pluginActions) ? slot : pluginActions;
+  return {
+    handled: true,
+    text,
+    ...(actions.length ? { pluginActions: actions } : {}),
+    ...(attached ?? {})
+  };
 }
 
 function scopeOf(ctx: CommandContext): string | undefined {
@@ -69,32 +81,32 @@ export function registerOnboardingCommands(context: ManagedGroupCommandContext):
 
   router.register('rules', '*', metadata('rules', 'group-rules', { mutation: 'none', usage: '/rules' }), async (ctx) => {
     const scopeId = scopeOf(ctx);
-    if (!scopeId) return reply(ctx.t(`${ns}.disabled`));
+    if (!scopeId) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const config = await configFor(deps, scopeId);
-    if (!config.enabled) return reply(ctx.t(`${ns}.disabled`));
+    if (!config.enabled) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const rules = config.rules.text.trim();
     return reply(rules ? `${ctx.t(`${ns}.rules.header`)}\n${rules}` : ctx.t(`${ns}.rules.none`));
   });
 
   router.register('onboarding', 'status', metadata('status', 'manage-onboarding', { permission: ONBOARDING_MANAGE_PERMISSION, mutation: 'none', usage: '/onboarding status' }), async (ctx) => {
     const scopeId = scopeOf(ctx);
-    if (!scopeId) return reply(ctx.t(`${ns}.disabled`));
+    if (!scopeId) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const config = await configFor(deps, scopeId);
     const db = database(deps);
-    if (!db) return reply(ctx.t(`${ns}.unavailable`));
+    if (!db) return reply(ctx.t(`${ns}.unavailable`), withMessageSlot(`${ns}.unavailable`));
     const counts = statusCounts(db, scopeId);
-    return reply(ctx.t(`${ns}.status`, { state: ctx.t(`${ns}.state.${config.enabled ? 'on' : 'off'}`), ...counts }));
+    return reply(ctx.t(`${ns}.status`, { state: ctx.t(`${ns}.state.${config.enabled ? 'on' : 'off'}`), ...counts }), withMessageSlot(`${ns}.status`));
   });
 
   router.register('onboarding', 'preview', metadata('preview', 'manage-onboarding', { permission: ONBOARDING_MANAGE_PERMISSION, mutation: 'none', usage: '/onboarding preview' }), async (ctx) => {
     const scopeId = scopeOf(ctx);
     const actorId = ctx.actor?.identityAddress.identityId;
-    if (!scopeId || !actorId) return reply(ctx.t(`${ns}.disabled`));
+    if (!scopeId || !actorId) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const person = await personById(deps, actorId);
-    if (!person) return reply(ctx.t(`${ns}.resend.unknown`));
+    if (!person) return reply(ctx.t(`${ns}.resend.unknown`), withMessageSlot(`${ns}.resend.unknown`));
     const config = await configFor(deps, scopeId);
     const actions = await onboardingActions(deps, { config, scopeId, person, groupId: ctx.groupId, groupWid: ctx.groupWid });
-    return reply(ctx.t(`${ns}.preview.sent`), actions);
+    return reply(ctx.t(`${ns}.preview.sent`), actions, withMessageSlot(`${ns}.preview.sent`));
   });
 
   router.register('onboarding', 'catch-up', metadata('catch-up', 'manage-onboarding', {
@@ -102,48 +114,48 @@ export function registerOnboardingCommands(context: ManagedGroupCommandContext):
   }), async (ctx) => {
     const scopeId = scopeOf(ctx);
     const actorId = ctx.actor?.identityAddress.identityId;
-    if (!scopeId || !actorId) return reply(ctx.t(`${ns}.disabled`));
+    if (!scopeId || !actorId) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const config = await configFor(deps, scopeId);
-    if (!config.enabled) return reply(ctx.t(`${ns}.disabled`));
+    if (!config.enabled) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const db = database(deps);
-    if (!db) return reply(ctx.t(`${ns}.unavailable`));
+    if (!db) return reply(ctx.t(`${ns}.unavailable`), withMessageSlot(`${ns}.unavailable`));
     await ensureSeeded(deps, db, scopeId);
     const [verb, rawCount] = (ctx.remainingArgs ?? ctx.command.args).map((arg) => arg.toLowerCase());
     const campaign = catchUpRow(db, scopeId);
     const pace = { batch: config.catchUp.batchSize, minutes: config.catchUp.intervalMinutes, from: config.catchUp.sendFrom, until: config.catchUp.sendUntil };
 
     if (verb === 'stop') {
-      if (campaign?.status !== 'running') return reply(ctx.t(`${ns}.catchUp.notRunning`));
+      if (campaign?.status !== 'running') return reply(ctx.t(`${ns}.catchUp.notRunning`), withMessageSlot(`${ns}.catchUp.notRunning`));
       setCatchUpStatus(db, scopeId, 'stopped', new Date());
       return reply(ctx.t(`${ns}.catchUp.stopped`, { sent: campaign.sent, left: queuedCount(db, scopeId) }),
-        [{ type: 'audit.record', action: 'onboarding.catch-up.stopped', targetJson: { scopeId }, metadataJson: { reason: 'admin' } }]);
+        [{ type: 'audit.record', action: 'onboarding.catch-up.stopped', targetJson: { scopeId }, metadataJson: { reason: 'admin' } }], withMessageSlot(`${ns}.catchUp.stopped`));
     }
     if (campaign?.status === 'running') {
-      return reply(ctx.t(`${ns}.catchUp.progress`, { sent: campaign.sent, skipped: campaign.skipped, left: queuedCount(db, scopeId) }));
+      return reply(ctx.t(`${ns}.catchUp.progress`, { sent: campaign.sent, skipped: campaign.skipped, left: queuedCount(db, scopeId) }), withMessageSlot(`${ns}.catchUp.progress`));
     }
     const candidates = await catchUpCandidates(deps, db, scopeId);
-    if (candidates.length === 0) return reply(ctx.t(`${ns}.catchUp.none`));
+    if (candidates.length === 0) return reply(ctx.t(`${ns}.catchUp.none`), withMessageSlot(`${ns}.catchUp.none`));
     if (verb !== 'start') {
-      return reply(ctx.t(`${ns}.catchUp.preview`, { count: candidates.length, hours: estimatedHours(config, candidates.length).toFixed(1), ...pace }));
+      return reply(ctx.t(`${ns}.catchUp.preview`, { count: candidates.length, hours: estimatedHours(config, candidates.length).toFixed(1), ...pace }), withMessageSlot(`${ns}.catchUp.preview`));
     }
     // The count must match what the admin saw, so a surprise change in membership never starts a bigger send.
-    if (Number(rawCount) !== candidates.length) return reply(ctx.t(`${ns}.catchUp.countChanged`, { count: candidates.length }));
+    if (Number(rawCount) !== candidates.length) return reply(ctx.t(`${ns}.catchUp.countChanged`, { count: candidates.length }), withMessageSlot(`${ns}.catchUp.countChanged`));
     const started = await prepareCatchUp(deps, { db, config, scopeId, actorIdentityId: actorId, identityIds: candidates });
-    return reply(ctx.t(`${ns}.catchUp.started`, { count: started.prepared, hours: estimatedHours(config, started.prepared).toFixed(1), ...pace }), started.actions);
+    return reply(ctx.t(`${ns}.catchUp.started`, { count: started.prepared, hours: estimatedHours(config, started.prepared).toFixed(1), ...pace }), started.actions, withMessageSlot(`${ns}.catchUp.started`));
   });
 
   router.register('onboarding', 'resend', metadata('resend', 'manage-onboarding', { permission: ONBOARDING_MANAGE_PERMISSION, mutation: 'durable', usage: '/onboarding resend @member' }), async (ctx) => {
     const scopeId = scopeOf(ctx);
-    if (!scopeId) return reply(ctx.t(`${ns}.disabled`));
+    if (!scopeId) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const config = await configFor(deps, scopeId);
-    if (!config.enabled) return reply(ctx.t(`${ns}.disabled`));
+    if (!config.enabled) return reply(ctx.t(`${ns}.disabled`), withMessageSlot(`${ns}.disabled`));
     const wid = ctx.command.mentions[0] ?? ctx.message.mentions?.[0]?.wid ?? ctx.message.replyTo?.snapshot?.authorWid;
-    if (!wid) return reply(ctx.t(`${ns}.resend.usage`));
+    if (!wid) return reply(ctx.t(`${ns}.resend.usage`), withMessageSlot(`${ns}.resend.usage`));
     const person = await personByWid(deps, wid);
-    if (!person) return reply(ctx.t(`${ns}.resend.unknown`));
+    if (!person) return reply(ctx.t(`${ns}.resend.unknown`), withMessageSlot(`${ns}.resend.unknown`));
     const actions = await onboardingActions(deps, { config, scopeId, person, groupId: ctx.groupId, groupWid: ctx.groupWid });
     return reply(ctx.t(`${ns}.resend.done`, { member: person.name }), [
       { type: 'audit.record', action: 'onboarding.resent', targetJson: { scopeId, identityId: person.identityId } }, ...actions
-    ]);
+    ], withMessageSlot(`${ns}.resend.done`));
   });
 }
