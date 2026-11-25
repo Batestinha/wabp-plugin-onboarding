@@ -1,3 +1,4 @@
+import { withMessageSlot } from './messageSlot';
 import type { PluginAction } from '@wabs/plugin-sdk/actions';
 import type { PluginDatabase } from '@wabs/plugin-sdk/database';
 import type { OnboardingConfig } from './config';
@@ -158,7 +159,7 @@ export async function runCatchUpBatch(deps: OnboardingDeps, scopeId: string): Pr
   const starter = await personById(deps, finished.started_by_identity_id);
   if (starter) {
     const t = await translatorForPerson(deps, starter.identityId, scopeId);
-    actions.push({ type: 'message.sendText', chatId: starter.deliveryChatId, text: t(`${ns}.catchUp.finished`, { sent: finished.sent, skipped: finished.skipped }) });
+    actions.push({ type: 'message.sendText', chatId: starter.deliveryChatId, text: t(`${ns}.catchUp.finished`, { sent: finished.sent, skipped: finished.skipped }), ...withMessageSlot(`${ns}.catchUp.finished`) });
   }
   return actions;
 }
