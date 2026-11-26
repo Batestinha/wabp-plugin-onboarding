@@ -1,6 +1,6 @@
 {
   "name": "@wabs/plugin-onboarding",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Welcomes newcomers with group rules and a guide to available commands. Administrators publish editions that members can read with /updates or subscribe to receive privately.",
   "license": "MIT",
   "private": true,

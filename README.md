@@ -15,6 +15,8 @@ Use `/updates` for unread editions in your community. `/updates on` subscribes t
 
 Open **Updates** in the scope’s plugin settings to write a draft, review changes to effective rules or member-facing help, see the member message and eligible subscriber count, and publish. Dismissing or saving a draft keeps it private. Published editions keep their original text. Multiple edits and translated help labels do not create duplicate editions.
 
+Use **Welcome and rules**, **Guide and invitation**, **Returning members**, and **Late welcomes and delivery** to edit the messages people receive. The WABP message editor lets you insert the member name and community or group name in personalized messages and preview them with sample values. Rules and edition bodies support multiline wording and preserve literal braces.
+
 Automatic delivery uses the late-welcome batch size, interval and local sending hours. The bot checks current membership, moderation standing and subscription at dispatch. Each edition stays unread until the outbox confirms delivery. A failed edition can be requested again with `/updates`.
 
 `/rules` and `/updates` are available to members. Administrators retain `/onboarding preview|status|resend|catch-up`. The plugin starts disabled and requires WABP core API 0.3.30. It includes English and European Portuguese.

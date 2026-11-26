@@ -8,7 +8,7 @@
   },
   "description": "Welcomes newcomers with group rules and a guide to available commands. Administrators publish editions that members can read with /updates or subscribe to receive privately.",
   "kind": "managed_group",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "coreApiRange": "^0.3.30",
   "entrypoint": "dist/index.js",
   "messageNamespace": "official.onboarding",
@@ -257,9 +257,9 @@
         "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.enabled",
         "path": "enabled",
-        "label": "Enabled",
+        "label": "Enable onboarding and updates",
         "description": "Welcome newcomers and manage update editions in this scope.",
-        "section": "Onboarding & Updates",
+        "section": "Updates",
         "order": 10,
         "schema": {
           "type": "boolean"
@@ -276,39 +276,34 @@
       },
       {
         "pluginId": "official.onboarding",
-        "id": "plugin.official.onboarding.exemptGroupChatIds",
-        "path": "exemptGroupChatIds",
-        "label": "Exempt groups",
-        "description": "Groups whose arrivals never count as arriving here.",
-        "section": "Onboarding & Updates",
-        "order": 20,
-        "schema": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ui": {
-          "widget": "tags",
-          "helpText": "Groups whose arrivals never count as arriving here."
-        }
-      },
-      {
-        "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.welcome.text",
         "path": "welcome.text",
         "label": "Welcome",
-        "description": "Private welcome. Empty uses the built-in text. Use {name} and {scope}.",
-        "section": "Messages",
-        "order": 30,
+        "description": "The first private message a newcomer receives. Leave empty to use the default welcome.",
+        "section": "Welcome and rules",
+        "order": 20,
         "schema": {
           "type": "string",
           "max": 2000
         },
         "ui": {
           "widget": "text",
+          "label": "Welcome",
           "multiline": true,
-          "helpText": "Private welcome. Empty uses the built-in text. Use {name} and {scope}."
+          "helpText": "The first private message a newcomer receives. Leave empty to use the default welcome.",
+          "templateDialect": "token-substitution-v1",
+          "templateVariables": [
+            {
+              "token": "name",
+              "label": "Member name",
+              "sampleValue": "Ana"
+            },
+            {
+              "token": "scope",
+              "label": "Community or group name",
+              "sampleValue": "Walking Club"
+            }
+          ]
         }
       },
       {
@@ -316,17 +311,39 @@
         "id": "plugin.official.onboarding.rules.text",
         "path": "rules.text",
         "label": "Rules",
-        "description": "Shown in the welcome and with /rules. Empty: no rules.",
-        "section": "Messages",
-        "order": 40,
+        "description": "Included in the welcome and shown with /rules. Leave empty to omit the rules.",
+        "section": "Welcome and rules",
+        "order": 30,
         "schema": {
           "type": "string",
           "max": 4000
         },
         "ui": {
           "widget": "text",
+          "label": "Rules",
           "multiline": true,
-          "helpText": "Shown in the welcome and with /rules. Empty: no rules."
+          "helpText": "Included in the welcome and shown with /rules. Leave empty to omit the rules.",
+          "templateDialect": "token-substitution-v1"
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.exemptGroupChatIds",
+        "path": "exemptGroupChatIds",
+        "label": "Exempt groups",
+        "description": "Joining one of these groups does not trigger a welcome.",
+        "section": "Welcome and rules",
+        "order": 40,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ui": {
+          "widget": "entity-picker",
+          "label": "Group",
+          "helpText": "Joining one of these groups does not trigger a welcome."
         }
       },
       {
@@ -334,24 +351,24 @@
         "id": "plugin.official.onboarding.guide.enabled",
         "path": "guide.enabled",
         "label": "Getting-started guide",
-        "description": "Send a short guide built from /help: what members can do here.",
-        "section": "Messages",
+        "description": "Send newcomers a short guide to the commands they can use here.",
+        "section": "Guide and invitation",
         "order": 50,
         "schema": {
           "type": "boolean"
         },
         "ui": {
           "widget": "toggle",
-          "helpText": "Send a short guide built from /help: what members can do here."
+          "helpText": "Send newcomers a short guide to the commands they can use here."
         }
       },
       {
         "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.guide.maxEntries",
         "path": "guide.maxEntries",
-        "label": "Guide entries",
-        "description": "Most commands listed in the guide.",
-        "section": "Messages",
+        "label": "Maximum guide entries",
+        "description": "Maximum number of commands to include in the guide.",
+        "section": "Guide and invitation",
         "order": 60,
         "schema": {
           "type": "number",
@@ -360,16 +377,16 @@
         },
         "ui": {
           "widget": "number",
-          "helpText": "Most commands listed in the guide."
+          "helpText": "Maximum number of commands to include in the guide."
         }
       },
       {
         "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.guide.includeFamilies",
         "path": "guide.includeFamilies",
-        "label": "Guide: only these",
-        "description": "Help families to keep in the guide; empty keeps every family.",
-        "section": "Messages",
+        "label": "Include command families",
+        "description": "Leave empty to include all available families.",
+        "section": "Guide and invitation",
         "order": 70,
         "schema": {
           "type": "array",
@@ -378,17 +395,24 @@
           }
         },
         "ui": {
-          "widget": "tags",
-          "helpText": "Help families to keep in the guide; empty keeps every family."
+          "widget": "entity-picker",
+          "label": "Command family",
+          "helpText": "Leave empty to include all available families.",
+          "dynamicOptions": {
+            "source": "command-families",
+            "filter": {
+              "newcomerGuideEligible": true
+            }
+          }
         }
       },
       {
         "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.guide.excludeFamilies",
         "path": "guide.excludeFamilies",
-        "label": "Guide: leave out",
-        "description": "Help families to leave out of the guide.",
-        "section": "Messages",
+        "label": "Exclude command families",
+        "description": "Omit these families from the guide.",
+        "section": "Guide and invitation",
         "order": 80,
         "schema": {
           "type": "array",
@@ -397,8 +421,15 @@
           }
         },
         "ui": {
-          "widget": "tags",
-          "helpText": "Help families to leave out of the guide."
+          "widget": "entity-picker",
+          "label": "Command family",
+          "helpText": "Omit these families from the guide.",
+          "dynamicOptions": {
+            "source": "command-families",
+            "filter": {
+              "newcomerGuideEligible": true
+            }
+          }
         }
       },
       {
@@ -406,15 +437,15 @@
         "id": "plugin.official.onboarding.invitation.enabled",
         "path": "invitation.enabled",
         "label": "Account invitation",
-        "description": "Also send the invitation text below.",
-        "section": "Messages",
+        "description": "Send newcomers the account invitation below.",
+        "section": "Guide and invitation",
         "order": 90,
         "schema": {
           "type": "boolean"
         },
         "ui": {
           "widget": "toggle",
-          "helpText": "Also send the invitation text below."
+          "helpText": "Send newcomers the account invitation below."
         }
       },
       {
@@ -422,8 +453,8 @@
         "id": "plugin.official.onboarding.invitation.text",
         "path": "invitation.text",
         "label": "Invitation text",
-        "description": "For example how and where to create an account. Use {name} and {scope}.",
-        "section": "Messages",
+        "description": "Tell newcomers how and where to create an account. Leave empty to skip the invitation.",
+        "section": "Guide and invitation",
         "order": 100,
         "schema": {
           "type": "string",
@@ -431,129 +462,54 @@
         },
         "ui": {
           "widget": "text",
+          "label": "Invitation text",
           "multiline": true,
-          "helpText": "For example how and where to create an account. Use {name} and {scope}."
+          "helpText": "Tell newcomers how and where to create an account. Leave empty to skip the invitation.",
+          "templateDialect": "token-substitution-v1",
+          "templateVariables": [
+            {
+              "token": "name",
+              "label": "Member name",
+              "sampleValue": "Ana"
+            },
+            {
+              "token": "scope",
+              "label": "Community or group name",
+              "sampleValue": "Walking Club"
+            }
+          ]
         }
       },
       {
         "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.invitation.skipLinked",
         "path": "invitation.skipLinked",
-        "label": "Skip if already linked",
-        "description": "Do not send the invitation to people who already have a linked account.",
-        "section": "Messages",
+        "label": "Skip linked accounts",
+        "description": "Skip the invitation when the person already has a linked account.",
+        "section": "Guide and invitation",
         "order": 110,
         "schema": {
           "type": "boolean"
         },
         "ui": {
           "widget": "toggle",
-          "helpText": "Do not send the invitation to people who already have a linked account."
-        }
-      },
-      {
-        "pluginId": "official.onboarding",
-        "id": "plugin.official.onboarding.catchUp.intro",
-        "path": "catchUp.intro",
-        "label": "Late welcome opening",
-        "description": "Opening of the one-time late welcome for people who were already here. Empty uses the built-in text. Use {name} and {scope}.",
-        "section": "Messages",
-        "order": 120,
-        "schema": {
-          "type": "string",
-          "max": 2000
-        },
-        "ui": {
-          "widget": "text",
-          "multiline": true,
-          "helpText": "Opening of the one-time late welcome for people who were already here. Empty uses the built-in text. Use {name} and {scope}."
-        }
-      },
-      {
-        "pluginId": "official.onboarding",
-        "id": "plugin.official.onboarding.catchUp.batchSize",
-        "path": "catchUp.batchSize",
-        "label": "Late welcomes per batch",
-        "description": "People who get the late welcome in each batch.",
-        "section": "Onboarding & Updates",
-        "order": 130,
-        "schema": {
-          "type": "number",
-          "min": 1,
-          "max": 20
-        },
-        "ui": {
-          "widget": "number",
-          "helpText": "People who get the late welcome in each batch."
-        }
-      },
-      {
-        "pluginId": "official.onboarding",
-        "id": "plugin.official.onboarding.catchUp.intervalMinutes",
-        "path": "catchUp.intervalMinutes",
-        "label": "Minutes between batches",
-        "description": "Pause between late-welcome batches, so the bot never sends a burst.",
-        "section": "Onboarding & Updates",
-        "order": 140,
-        "schema": {
-          "type": "number",
-          "min": 1,
-          "max": 240,
-          "unit": "minutes"
-        },
-        "ui": {
-          "widget": "number",
-          "helpText": "Pause between late-welcome batches, so the bot never sends a burst."
-        }
-      },
-      {
-        "pluginId": "official.onboarding",
-        "id": "plugin.official.onboarding.catchUp.sendFrom",
-        "path": "catchUp.sendFrom",
-        "label": "Late welcomes from",
-        "description": "Earliest local time (HH:MM) for late welcomes.",
-        "section": "Onboarding & Updates",
-        "order": 150,
-        "schema": {
-          "type": "string",
-          "max": 5
-        },
-        "ui": {
-          "widget": "text",
-          "helpText": "Earliest local time (HH:MM) for late welcomes."
-        }
-      },
-      {
-        "pluginId": "official.onboarding",
-        "id": "plugin.official.onboarding.catchUp.sendUntil",
-        "path": "catchUp.sendUntil",
-        "label": "Late welcomes until",
-        "description": "Latest local time (HH:MM) for late welcomes.",
-        "section": "Onboarding & Updates",
-        "order": 160,
-        "schema": {
-          "type": "string",
-          "max": 5
-        },
-        "ui": {
-          "widget": "text",
-          "helpText": "Latest local time (HH:MM) for late welcomes."
+          "helpText": "Skip the invitation when the person already has a linked account."
         }
       },
       {
         "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.welcomeBack.enabled",
         "path": "welcomeBack.enabled",
-        "label": "Welcome back",
-        "description": "Send a short welcome back to people who left every group here and return.",
-        "section": "Messages",
-        "order": 170,
+        "label": "Welcome returning members",
+        "description": "Welcome people back after they have left every group here and returned.",
+        "section": "Returning members",
+        "order": 120,
         "schema": {
           "type": "boolean"
         },
         "ui": {
           "widget": "toggle",
-          "helpText": "Send a short welcome back to people who left every group here and return."
+          "helpText": "Welcome people back after they have left every group here and returned."
         }
       },
       {
@@ -561,27 +517,41 @@
         "id": "plugin.official.onboarding.welcomeBack.text",
         "path": "welcomeBack.text",
         "label": "Welcome back text",
-        "description": "Empty uses the built-in text. Use {name} and {scope}.",
-        "section": "Messages",
-        "order": 180,
+        "description": "Leave empty to use the default welcome back.",
+        "section": "Returning members",
+        "order": 130,
         "schema": {
           "type": "string",
           "max": 1000
         },
         "ui": {
           "widget": "text",
+          "label": "Welcome back text",
           "multiline": true,
-          "helpText": "Empty uses the built-in text. Use {name} and {scope}."
+          "helpText": "Leave empty to use the default welcome back.",
+          "templateDialect": "token-substitution-v1",
+          "templateVariables": [
+            {
+              "token": "name",
+              "label": "Member name",
+              "sampleValue": "Ana"
+            },
+            {
+              "token": "scope",
+              "label": "Community or group name",
+              "sampleValue": "Walking Club"
+            }
+          ]
         }
       },
       {
         "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.welcomeBack.minAbsenceDays",
         "path": "welcomeBack.minAbsenceDays",
-        "label": "Away at least",
-        "description": "Days away before a return gets the welcome back.",
-        "section": "Messages",
-        "order": 190,
+        "label": "Minimum absence",
+        "description": "Days away before a returning member receives this message.",
+        "section": "Returning members",
+        "order": 140,
         "schema": {
           "type": "number",
           "min": 0,
@@ -590,7 +560,110 @@
         },
         "ui": {
           "widget": "number",
-          "helpText": "Days away before a return gets the welcome back."
+          "helpText": "Days away before a returning member receives this message."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.intro",
+        "path": "catchUp.intro",
+        "label": "Late welcome opening",
+        "description": "Opening for people who were here before onboarding started. Leave empty to use the default opening.",
+        "section": "Late welcomes and delivery",
+        "order": 150,
+        "schema": {
+          "type": "string",
+          "max": 2000
+        },
+        "ui": {
+          "widget": "text",
+          "label": "Late welcome opening",
+          "multiline": true,
+          "helpText": "Opening for people who were here before onboarding started. Leave empty to use the default opening.",
+          "templateDialect": "token-substitution-v1",
+          "templateVariables": [
+            {
+              "token": "name",
+              "label": "Member name",
+              "sampleValue": "Ana"
+            },
+            {
+              "token": "scope",
+              "label": "Community or group name",
+              "sampleValue": "Walking Club"
+            }
+          ]
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.batchSize",
+        "path": "catchUp.batchSize",
+        "label": "Recipients per batch",
+        "description": "Applies to late welcomes and automatic private updates.",
+        "section": "Late welcomes and delivery",
+        "order": 160,
+        "schema": {
+          "type": "number",
+          "min": 1,
+          "max": 20
+        },
+        "ui": {
+          "widget": "number",
+          "helpText": "Applies to late welcomes and automatic private updates."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.intervalMinutes",
+        "path": "catchUp.intervalMinutes",
+        "label": "Time between batches",
+        "description": "Pause between batches of late welcomes or private updates.",
+        "section": "Late welcomes and delivery",
+        "order": 170,
+        "schema": {
+          "type": "number",
+          "min": 1,
+          "max": 240,
+          "unit": "minutes"
+        },
+        "ui": {
+          "widget": "number",
+          "helpText": "Pause between batches of late welcomes or private updates."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.sendFrom",
+        "path": "catchUp.sendFrom",
+        "label": "Delivery starts at",
+        "description": "Earliest local time (HH:MM) for late welcomes and automatic private updates.",
+        "section": "Late welcomes and delivery",
+        "order": 180,
+        "schema": {
+          "type": "string",
+          "max": 5
+        },
+        "ui": {
+          "widget": "text",
+          "helpText": "Earliest local time (HH:MM) for late welcomes and automatic private updates."
+        }
+      },
+      {
+        "pluginId": "official.onboarding",
+        "id": "plugin.official.onboarding.catchUp.sendUntil",
+        "path": "catchUp.sendUntil",
+        "label": "Delivery ends at",
+        "description": "Latest local time (HH:MM) for late welcomes and automatic private updates.",
+        "section": "Late welcomes and delivery",
+        "order": 190,
+        "schema": {
+          "type": "string",
+          "max": 5
+        },
+        "ui": {
+          "widget": "text",
+          "helpText": "Latest local time (HH:MM) for late welcomes and automatic private updates."
         }
       }
     ],
