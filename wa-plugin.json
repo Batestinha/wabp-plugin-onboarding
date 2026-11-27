@@ -9,7 +9,7 @@
   "description": "Welcomes newcomers with group rules and a guide to available commands. Administrators publish editions that members can read with /updates or subscribe to receive privately.",
   "kind": "managed_group",
   "version": "0.2.4",
-  "coreApiRange": "^0.3.30",
+  "coreApiRange": "^0.3.31",
   "entrypoint": "dist/index.js",
   "messageNamespace": "official.onboarding",
   "descriptionKey": "official.onboarding.description",
