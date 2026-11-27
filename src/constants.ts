@@ -1,6 +1,6 @@
 export const ONBOARDING_PLUGIN_ID = 'official.onboarding';
 export const ONBOARDING_NAMESPACE = ONBOARDING_PLUGIN_ID;
-export const ONBOARDING_VERSION = '0.2.3';
+export const ONBOARDING_VERSION = '0.2.4';
 export const ONBOARDING_CORE_API_RANGE = '^0.3.30';
 export const ONBOARDING_DATABASE = 'onboarding';
 export const ONBOARDING_MANAGE_PERMISSION = 'plugin.onboarding.manage';
