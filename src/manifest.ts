@@ -18,6 +18,7 @@ import { UPDATE_JOB } from './updateDelivery';
 import { updatesOffer, updatesService } from './subscriptions';
 
 export const onboardingManifest: PluginManifest = {
+  ...{ operationCatalogVersion: require('../wa-plugin.json').operationCatalogVersion, operationPermissions: require('../wa-plugin.json').operationPermissions },
   pluginId: ONBOARDING_PLUGIN_ID,
   name: 'Onboarding & Updates',
   author: { name: 'Batestinha', url: 'https://github.com/Batestinha' },

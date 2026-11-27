@@ -27,8 +27,8 @@
   },
   "description": "Welcomes newcomers with group rules and a guide to available commands. Administrators publish editions that members can read with /updates or subscribe to receive privately.",
   "kind": "managed_group",
-  "version": "0.3.0",
-  "coreApiRange": "^0.3.32",
+  "version": "0.3.1",
+  "coreApiRange": "^0.3.34",
   "entrypoint": "dist/index.js",
   "messageNamespace": "official.onboarding",
   "descriptionKey": "official.onboarding.description",
@@ -651,5 +651,17 @@
       }
     ],
     "internalConfigPaths": []
-  }
+  },
+  "operationCatalogVersion": 1,
+  "operationPermissions": [
+    {
+      "id": "official.onboarding.manage",
+      "action": "plugin.onboarding.manage",
+      "title": "Manage onboarding",
+      "description": "Preview, inspect and deliver onboarding messages.",
+      "titleKey": "official.onboarding.help.feature.title",
+      "descriptionKey": "official.onboarding.help.feature.summary",
+      "defaultAccess": "explicit"
+    }
+  ]
 }
