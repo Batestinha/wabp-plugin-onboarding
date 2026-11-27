@@ -11,6 +11,7 @@ import { clearLeft, insertMember, isSeeded, markLeft, memberRow, seedScope } fro
 
 /** Host capabilities used here; hooks and commands each provide them. */
 export interface OnboardingDeps {
+  services?: import('@wabs/plugin-sdk/services').PluginServiceCaller | undefined;
   memberScopeFor?: import('@wabs/plugin-sdk/hook-plugin').PluginMemberScopeFor | undefined;
   enqueuePluginJob?: import('@wabs/plugin-sdk/jobs').PluginJobContext['enqueuePluginJob'];
   privateTextReceipt?: import('@wabs/plugin-sdk/managed-group-plugin').ManagedGroupCapabilities['privateTextReceipt'];
@@ -49,6 +50,14 @@ export function nowFrom(deps: OnboardingDeps): Date {
 
 export async function configFor(deps: OnboardingDeps, scopeId: string): Promise<OnboardingConfig> {
   return parseOnboardingConfig(deps.configFor ? await deps.configFor(scopeId) : {});
+}
+
+export async function publishedRules(deps: OnboardingDeps, scopeId: string) {
+  if (!deps.services) return undefined;
+  try {
+    const rules = await deps.services.call<{ text: string; revision: string } | null>({ serviceId: 'official.community-admin.rules.v1', method: 'getPublished', scopeId, input: {} });
+    return rules?.text;
+  } catch { return undefined; }
 }
 
 export function database(deps: OnboardingDeps): PluginDatabase | undefined {
@@ -153,7 +162,7 @@ export async function onboardingActions(deps: OnboardingDeps, input: {
   const welcome = input.intro !== undefined
     ? fill(input.intro.trim() || t(`${ns}.catchUp.introDefault`, values), values)
     : fill(config.welcome.text.trim() || t(`${ns}.welcome.default`, values), values);
-  const rules = config.rules.text.trim();
+  const rules = await publishedRules(deps, input.scopeId);
   let guide: string[] = [];
   if (config.guide.enabled && deps.newcomerGuideFor) {
     guide = await deps.newcomerGuideFor({

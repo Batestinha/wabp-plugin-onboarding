@@ -186,12 +186,12 @@ test('exempt groups and a disabled plugin do nothing', async () => {
   assert.equal(await hooks.onParticipantChange(event(h, 'join', 'parent@g.us', zoe)), undefined);
 });
 
-test('/rules shows the rules; /onboarding resend and preview send the welcome privately', async () => {
+test('Admin owns /rules and Onboarding resends and previews the welcome privately', async () => {
   const { h } = community();
   plugin.registerCommands(h.context);
   const ctx = (actor, extra = {}) => ({ scopeId: 'scope-1', groupWid: 'main@g.us', groupId: 'main@g.us', t: require('./helpers.cjs').t,
     actor: { identityAddress: actor }, message: { mentions: [] }, command: { mentions: [], args: [] }, ...extra });
-  assert.equal((await h.commands.get('rules *')(ctx(rui))).text, 'Our rules:\nBe kind.');
+  assert.equal(h.commands.has('rules *'), false);
   const resend = await h.commands.get('onboarding resend')(ctx(ana, { command: { mentions: [rui.canonicalWid], args: [] } }));
   assert.match(resend.text, /sent the welcome to Rui again/u);
   assert.ok(resend.pluginActions.filter(action => action.type === 'message.sendText').every(action => action.chatId === rui.deliveryChatId));

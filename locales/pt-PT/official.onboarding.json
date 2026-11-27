@@ -1,4 +1,7 @@
 {
+  "official.onboarding.subscription.title": "Novidades da comunidade",
+  "official.onboarding.subscription.on": "Ativas",
+  "official.onboarding.subscription.off": "Desativadas",
   "official.onboarding.description": "Dá as boas-vindas aos novos membros com as regras e um guia dos comandos disponíveis. Os administradores publicam edições que os membros podem ler com /updates ou subscrever para receber em privado.",
   "official.onboarding.help.family": "Boas-vindas e novidades",
   "official.onboarding.help.feature.title": "Boas-vindas e novidades",

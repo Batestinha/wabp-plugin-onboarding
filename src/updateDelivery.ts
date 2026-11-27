@@ -57,7 +57,7 @@ export function subscribed(db: PluginDatabase, scopeId: string, id: string) {
 }
 export function setSubscription(db: PluginDatabase, scopeId: string, id: string, on: boolean) {
   db.run(`INSERT INTO update_members(scope_id, identity_id, subscribed) VALUES (?, ?, ?)
-    ON CONFLICT(scope_id, identity_id) DO UPDATE SET subscribed = excluded.subscribed`, scopeId, id, Number(on));
+    ON CONFLICT(scope_id, identity_id) DO UPDATE SET subscribed = excluded.subscribed WHERE subscribed != excluded.subscribed`, scopeId, id, Number(on));
 }
 
 function status(db: PluginDatabase, scopeId: string, row: Delivery, value: string, now: number) {

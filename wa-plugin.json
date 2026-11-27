@@ -1,5 +1,24 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
+  "memberSubscriptions": [
+    {
+      "id": "updates",
+      "kind": "internal",
+      "scope": "community",
+      "labelKey": "official.onboarding.subscription.title",
+      "serviceId": "official.onboarding.subscriptions.v1",
+      "choices": [
+        {
+          "id": "off",
+          "labelKey": "official.onboarding.subscription.off"
+        },
+        {
+          "id": "on",
+          "labelKey": "official.onboarding.subscription.on"
+        }
+      ]
+    }
+  ],
   "pluginId": "official.onboarding",
   "name": "Onboarding & Updates",
   "author": {
@@ -8,14 +27,13 @@
   },
   "description": "Welcomes newcomers with group rules and a guide to available commands. Administrators publish editions that members can read with /updates or subscribe to receive privately.",
   "kind": "managed_group",
-  "version": "0.2.4",
-  "coreApiRange": "^0.3.31",
+  "version": "0.3.0",
+  "coreApiRange": "^0.3.32",
   "entrypoint": "dist/index.js",
   "messageNamespace": "official.onboarding",
   "descriptionKey": "official.onboarding.description",
   "commands": [
     "/updates",
-    "/rules",
     "/onboarding preview",
     "/onboarding status",
     "/onboarding resend",
@@ -30,8 +48,6 @@
       "Welcome and rules",
       "Boas-vindas e regras",
       "Onboarding",
-      "rules",
-      "regras",
       "welcome",
       "boas-vindas",
       "onboarding"
@@ -54,31 +70,6 @@
         "keywords": [
           "updates",
           "novidades"
-        ],
-        "availability": {
-          "invocation": "either",
-          "requiresCurrentManagedGroupMembership": true,
-          "currentManagedGroupMembershipMode": "effective_scope"
-        }
-      },
-      {
-        "topicId": "group-rules",
-        "titleKey": "official.onboarding.help.rules.title",
-        "summaryKey": "official.onboarding.help.rules.summary",
-        "order": 10,
-        "commands": [
-          "/rules"
-        ],
-        "instructionKeys": [
-          "official.onboarding.help.rules.instruction"
-        ],
-        "exampleKeys": [
-          "official.onboarding.help.rules.example"
-        ],
-        "keywords": [
-          "rules",
-          "regras",
-          "conduct"
         ],
         "availability": {
           "invocation": "either",
@@ -143,13 +134,19 @@
     "workflows": []
   },
   "dependencies": [],
-  "integrations": [],
+  "integrations": [
+    {
+      "pluginId": "official.community-admin",
+      "versionRange": ">=1.1.0",
+      "description": "Communicates the published group rules in welcomes and update drafts."
+    }
+  ],
   "assistant": {
     "summary": "Welcomes people once, on their first arrival in a scope (a community or standalone groups): a private welcome with the rules, a guide built from /help, and an optional account invitation.",
     "useCases": [
       "Welcome newcomers privately, once per scope, never again when they join another group of it.",
       "Read published updates with /updates or subscribe with /updates on.",
-      "Show the rules with /rules.",
+      "Include the group rules published by Group Administration Assistant in welcomes.",
       "Preview the welcome or send it again to someone.",
       "Once, send a paced late welcome to everyone who was here before onboarding started."
     ],
@@ -164,13 +161,6 @@
       "Group history is sent separately, per group, by Archive Courier."
     ],
     "workflows": [
-      {
-        "intent": "onboarding_rules",
-        "description": "Show the rules.",
-        "commands": [
-          "/rules"
-        ]
-      },
       {
         "intent": "onboarding_manage",
         "description": "Preview, count or resend the welcome.",
@@ -197,6 +187,19 @@
           "name": "allowDelivery",
           "access": "read",
           "timeoutMs": 60000
+        }
+      ]
+    },
+    {
+      "serviceId": "official.onboarding.subscriptions.v1",
+      "methods": [
+        {
+          "name": "read",
+          "access": "read"
+        },
+        {
+          "name": "set",
+          "access": "mutation"
         }
       ]
     }
@@ -236,7 +239,6 @@
       "enabled",
       "exemptGroupChatIds",
       "welcome.text",
-      "rules.text",
       "guide.enabled",
       "guide.maxEntries",
       "guide.includeFamilies",
@@ -281,7 +283,7 @@
         "path": "welcome.text",
         "label": "Welcome",
         "description": "The first private message a newcomer receives. Leave empty to use the default welcome.",
-        "section": "Welcome and rules",
+        "section": "Welcome",
         "order": 20,
         "schema": {
           "type": "string",
@@ -309,32 +311,12 @@
       },
       {
         "pluginId": "official.onboarding",
-        "id": "plugin.official.onboarding.rules.text",
-        "path": "rules.text",
-        "label": "Rules",
-        "description": "Included in the welcome and shown with /rules. Leave empty to omit the rules.",
-        "section": "Welcome and rules",
-        "order": 30,
-        "schema": {
-          "type": "string",
-          "max": 4000
-        },
-        "ui": {
-          "widget": "text",
-          "label": "Rules",
-          "multiline": true,
-          "helpText": "Included in the welcome and shown with /rules. Leave empty to omit the rules.",
-          "templateDialect": "token-substitution-v1"
-        }
-      },
-      {
-        "pluginId": "official.onboarding",
         "id": "plugin.official.onboarding.exemptGroupChatIds",
         "path": "exemptGroupChatIds",
         "label": "Exempt groups",
         "description": "Joining one of these groups does not trigger a welcome.",
-        "section": "Welcome and rules",
-        "order": 40,
+        "section": "Welcome",
+        "order": 30,
         "schema": {
           "type": "array",
           "items": {
@@ -354,7 +336,7 @@
         "label": "Getting-started guide",
         "description": "Send newcomers a short guide to the commands they can use here.",
         "section": "Guide and invitation",
-        "order": 50,
+        "order": 40,
         "schema": {
           "type": "boolean"
         },
@@ -370,7 +352,7 @@
         "label": "Maximum guide entries",
         "description": "Maximum number of commands to include in the guide.",
         "section": "Guide and invitation",
-        "order": 60,
+        "order": 50,
         "schema": {
           "type": "number",
           "min": 1,
@@ -388,7 +370,7 @@
         "label": "Include command families",
         "description": "Leave empty to include all available families.",
         "section": "Guide and invitation",
-        "order": 70,
+        "order": 60,
         "schema": {
           "type": "array",
           "items": {
@@ -414,7 +396,7 @@
         "label": "Exclude command families",
         "description": "Omit these families from the guide.",
         "section": "Guide and invitation",
-        "order": 80,
+        "order": 70,
         "schema": {
           "type": "array",
           "items": {
@@ -440,7 +422,7 @@
         "label": "Account invitation",
         "description": "Send newcomers the account invitation below.",
         "section": "Guide and invitation",
-        "order": 90,
+        "order": 80,
         "schema": {
           "type": "boolean"
         },
@@ -456,7 +438,7 @@
         "label": "Invitation text",
         "description": "Tell newcomers how and where to create an account. Leave empty to skip the invitation.",
         "section": "Guide and invitation",
-        "order": 100,
+        "order": 90,
         "schema": {
           "type": "string",
           "max": 2000
@@ -488,7 +470,7 @@
         "label": "Skip linked accounts",
         "description": "Skip the invitation when the person already has a linked account.",
         "section": "Guide and invitation",
-        "order": 110,
+        "order": 100,
         "schema": {
           "type": "boolean"
         },
@@ -504,7 +486,7 @@
         "label": "Welcome returning members",
         "description": "Welcome people back after they have left every group here and returned.",
         "section": "Returning members",
-        "order": 120,
+        "order": 110,
         "schema": {
           "type": "boolean"
         },
@@ -520,7 +502,7 @@
         "label": "Welcome back text",
         "description": "Leave empty to use the default welcome back.",
         "section": "Returning members",
-        "order": 130,
+        "order": 120,
         "schema": {
           "type": "string",
           "max": 1000
@@ -552,7 +534,7 @@
         "label": "Minimum absence",
         "description": "Days away before a returning member receives this message.",
         "section": "Returning members",
-        "order": 140,
+        "order": 130,
         "schema": {
           "type": "number",
           "min": 0,
@@ -571,7 +553,7 @@
         "label": "Late welcome opening",
         "description": "Opening for people who were here before onboarding started. Leave empty to use the default opening.",
         "section": "Late welcomes and delivery",
-        "order": 150,
+        "order": 140,
         "schema": {
           "type": "string",
           "max": 2000
@@ -603,7 +585,7 @@
         "label": "Recipients per batch",
         "description": "Applies to late welcomes and automatic private updates.",
         "section": "Late welcomes and delivery",
-        "order": 160,
+        "order": 150,
         "schema": {
           "type": "number",
           "min": 1,
@@ -621,7 +603,7 @@
         "label": "Time between batches",
         "description": "Pause between batches of late welcomes or private updates.",
         "section": "Late welcomes and delivery",
-        "order": 170,
+        "order": 160,
         "schema": {
           "type": "number",
           "min": 1,
@@ -640,7 +622,7 @@
         "label": "Delivery starts at",
         "description": "Earliest local time (HH:MM) for late welcomes and automatic private updates.",
         "section": "Late welcomes and delivery",
-        "order": 180,
+        "order": 170,
         "schema": {
           "type": "string",
           "max": 5
@@ -657,7 +639,7 @@
         "label": "Delivery ends at",
         "description": "Latest local time (HH:MM) for late welcomes and automatic private updates.",
         "section": "Late welcomes and delivery",
-        "order": 190,
+        "order": 180,
         "schema": {
           "type": "string",
           "max": 5

@@ -1,3 +1,4 @@
+const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -40,6 +41,11 @@ function host({ groups, config = {}, linked = [], guide = ['Stickers\n1. /sticke
   const guideCalls = [];
   const context = {
     databases: openDatabase(),
+    services: { async call({ serviceId, method }) {
+      assert.equal(serviceId, 'official.community-admin.rules.v1');
+      assert.equal(method, 'getPublished');
+      return { text: config.rules?.text ?? '', revision: 'test' };
+    } },
     configFor: async () => ({ enabled: true, ...config }),
     coveredGroupsForScope: async scopeId => groups.map(group => ({ scopeId, groupId: group.groupWid, groupWid: group.groupWid, groupDisplayName: group.name, managementMode: 'MANAGE' })),
     currentMemberIdentityIdsForScope: async () => [...new Set(groups.flatMap(group => group.members.map(member => member.identityId)))],

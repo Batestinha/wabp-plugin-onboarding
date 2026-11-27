@@ -15,7 +15,9 @@ import { onboardingMessages } from './messages';
 import { deliveryService, editionActions, editionConsoleOperations } from './updateOperations';
 import { UPDATE_JOB } from './updateDelivery';
 
-export const onboardingManifest: PluginManifest & { integrations: [] } = {
+import { updatesOffer, updatesService } from './subscriptions';
+
+export const onboardingManifest: PluginManifest = {
   pluginId: ONBOARDING_PLUGIN_ID,
   name: 'Onboarding & Updates',
   author: { name: 'Batestinha', url: 'https://github.com/Batestinha' },
@@ -31,23 +33,12 @@ export const onboardingManifest: PluginManifest & { integrations: [] } = {
     titleKey: `${ns}.help.feature.title`,
     summaryKey: `${ns}.help.feature.summary`,
     order: 15,
-    aliases: ['Welcome and rules', 'Boas-vindas e regras', 'Onboarding', 'rules', 'regras', 'welcome', 'boas-vindas', 'onboarding'],
+    aliases: ['Welcome and rules', 'Boas-vindas e regras', 'Onboarding', 'welcome', 'boas-vindas', 'onboarding'],
     topics: [
       {
         topicId: 'scope-updates', titleKey: ns + '.help.updates.title', summaryKey: ns + '.help.cmd.updates',
         order: 15, commands: ['/updates'], instructionKeys: [ns + '.editions.invitation'], exampleKeys: [ns + '.help.updates.example'],
         keywords: ['updates', 'novidades'], availability: { invocation: 'either', requiresCurrentManagedGroupMembership: true, currentManagedGroupMembershipMode: 'effective_scope' }
-      },
-      {
-        topicId: 'group-rules',
-        titleKey: `${ns}.help.rules.title`,
-        summaryKey: `${ns}.help.rules.summary`,
-        order: 10,
-        commands: ['/rules'],
-        instructionKeys: [`${ns}.help.rules.instruction`],
-        exampleKeys: [`${ns}.help.rules.example`],
-        keywords: ['rules', 'regras', 'conduct'],
-        availability: { invocation: 'either', requiresCurrentManagedGroupMembership: true, currentManagedGroupMembershipMode: 'effective_scope' }
       },
       {
         topicId: 'manage-onboarding',
@@ -68,20 +59,21 @@ export const onboardingManifest: PluginManifest & { integrations: [] } = {
   configSchema: onboardingConfigSchema,
   dangerousActions: [],
   backgroundJobs: [CATCH_UP_JOB, UPDATE_JOB, 'scope.configuration.changed', 'scope.help.changed'],
-  services: [deliveryService],
+  memberSubscriptions: [updatesOffer],
+  services: [deliveryService, updatesService],
   externalActions: editionActions,
   consoleOperations: editionConsoleOperations,
   databases: [{ name: ONBOARDING_DATABASE, engine: 'sqlite', scope: 'account', migrations: 'migrations/onboarding' }],
   dataVersion: '2',
   dependencies: [],
-  integrations: [],
+  integrations: [{ pluginId: 'official.community-admin', versionRange: '>=1.1.0', description: 'Communicates the published group rules in welcomes and update drafts.' }],
   cancellation: { workflows: [] },
   assistant: {
     summary: 'Welcomes people once, on their first arrival in a scope (a community or standalone groups): a private welcome with the rules, a guide built from /help, and an optional account invitation.',
     useCases: [
       'Welcome newcomers privately, once per scope, never again when they join another group of it.',
       'Read published updates with /updates or subscribe with /updates on.',
-      'Show the rules with /rules.',
+      'Include the group rules published by Group Administration Assistant in welcomes.',
       'Preview the welcome or send it again to someone.',
       'Once, send a paced late welcome to everyone who was here before onboarding started.'
     ],
@@ -92,7 +84,6 @@ export const onboardingManifest: PluginManifest & { integrations: [] } = {
       'Group history is sent separately, per group, by Archive Courier.'
     ],
     workflows: [
-      { intent: 'onboarding_rules', description: 'Show the rules.', commands: ['/rules'] },
       { intent: 'onboarding_manage', description: 'Preview, count or resend the welcome.', commands: ['/onboarding preview', '/onboarding status', '/onboarding resend'] },
       { intent: 'onboarding_catch_up', description: 'Send the late welcome to people who were already here, once and paced.', commands: ['/onboarding catch-up'] }
     ]

@@ -3,12 +3,13 @@ import { registerOnboardingCommands } from './commands';
 import { createOnboardingHooks } from './hooks';
 import { onboardingManifest } from './manifest';
 
+import { updatesRegistration } from './subscriptions';
 import { editionConsole, editionExternalActions, editionServices } from './updateOperations';
 
 export const onboardingPlugin: ManagedGroupPlugin = {
   manifest: onboardingManifest,
   registerConsoleOperations: editionConsole,
-  registerServices: editionServices,
+  registerServices: context => [...(editionServices(context) ?? []), updatesRegistration(context)],
   registerExternalActions: editionExternalActions,
   registerCommands(context) {
     registerOnboardingCommands(context);
