@@ -15,7 +15,7 @@ import { onboardingMessages } from './messages';
 import { deliveryService, editionActions, editionConsoleOperations } from './updateOperations';
 import { UPDATE_JOB } from './updateDelivery';
 
-export const onboardingManifest: PluginManifest = {
+export const onboardingManifest: PluginManifest & { integrations: [] } = {
   pluginId: ONBOARDING_PLUGIN_ID,
   name: 'Onboarding & Updates',
   author: { name: 'Batestinha', url: 'https://github.com/Batestinha' },
@@ -74,6 +74,7 @@ export const onboardingManifest: PluginManifest = {
   databases: [{ name: ONBOARDING_DATABASE, engine: 'sqlite', scope: 'account', migrations: 'migrations/onboarding' }],
   dataVersion: '2',
   dependencies: [],
+  integrations: [],
   cancellation: { workflows: [] },
   assistant: {
     summary: 'Welcomes people once, on their first arrival in a scope (a community or standalone groups): a private welcome with the rules, a guide built from /help, and an optional account invitation.',

@@ -8,8 +8,8 @@
   },
   "description": "Welcomes newcomers with group rules and a guide to available commands. Administrators publish editions that members can read with /updates or subscribe to receive privately.",
   "kind": "managed_group",
-  "version": "0.2.3",
-  "coreApiRange": "^0.3.30",
+  "version": "0.2.4",
+  "coreApiRange": "^0.3.31",
   "entrypoint": "dist/index.js",
   "messageNamespace": "official.onboarding",
   "descriptionKey": "official.onboarding.description",
@@ -143,6 +143,7 @@
     "workflows": []
   },
   "dependencies": [],
+  "integrations": [],
   "assistant": {
     "summary": "Welcomes people once, on their first arrival in a scope (a community or standalone groups): a private welcome with the rules, a guide built from /help, and an optional account invitation.",
     "useCases": [
