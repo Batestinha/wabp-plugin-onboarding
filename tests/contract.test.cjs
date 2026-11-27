@@ -9,7 +9,7 @@ const metadata = require('../wa-plugin.json');
 
 test('wa-plugin.json matches the compiled manifest and declares its own title and author', () => {
   assert.equal(validatePluginManifest(plugin.manifest), plugin.manifest);
-  assert.equal(metadata.schemaVersion, 2);
+  assert.equal(metadata.schemaVersion, 3);
   assert.equal(pluginIdentityProblem(metadata.pluginId, { name: metadata.name, author: metadata.author }), undefined);
   for (const key of ['pluginId', 'name', 'author', 'version', 'coreApiRange', 'messageNamespace', 'commands', 'eventSubscriptions',
     'dangerousActions', 'backgroundJobs', 'databases', 'requiredPermissions']) {
@@ -36,11 +36,11 @@ test('member messages declare the WABP editor and only the substitutions used at
   const controls = metadata.operatorConsole.controls;
   const messages = controls.filter(control => control.ui.multiline);
   assert.deepEqual(messages.map(control => control.path).sort(),
-    ['catchUp.intro', 'invitation.text', 'rules.text', 'welcome.text', 'welcomeBack.text']);
+    ['catchUp.intro', 'invitation.text', 'welcome.text', 'welcomeBack.text']);
   for (const control of messages) {
     assert.equal(control.ui.templateDialect, 'token-substitution-v1', control.path);
     assert.deepEqual((control.ui.templateVariables ?? []).map(variable => variable.token),
-      control.path === 'rules.text' ? [] : ['name', 'scope'], control.path);
+      ['name', 'scope'], control.path);
   }
   assert.equal(controls.find(control => control.path === 'exemptGroupChatIds').ui.widget, 'entity-picker');
   for (const path of ['guide.includeFamilies', 'guide.excludeFamilies']) {

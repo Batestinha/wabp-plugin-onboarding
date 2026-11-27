@@ -34,7 +34,7 @@ function choices(section: string, path: string, label: string, helpText: string,
   };
 }
 
-const WELCOME = 'Welcome and rules';
+const WELCOME = 'Welcome';
 const GUIDE = 'Guide and invitation';
 const DELIVERY = 'Late welcomes and delivery';
 const RETURN = 'Returning members';
@@ -44,7 +44,6 @@ export const onboardingControls: OnboardingControl[] = [
     ui: { widget: 'builder', helpText: 'Preview the member message and eligible audience before publishing an update.', builderId: 'official.onboarding.editions.v1', builderEndpoints: {
       state: '/api/v1/plugins/official.onboarding/:scopeId/editions', edit: '/api/v1/plugins/official.onboarding/:scopeId/editions' } } },
   message(WELCOME, 'welcome.text', 'Welcome', 'The first private message a newcomer receives. Leave empty to use the default welcome.', 2000, true),
-  message(WELCOME, 'rules.text', 'Rules', 'Included in the welcome and shown with /rules. Leave empty to omit the rules.', 4000),
   choices(WELCOME, 'exemptGroupChatIds', 'Exempt groups', 'Joining one of these groups does not trigger a welcome.', 'Group'),
   toggle(GUIDE, 'guide.enabled', 'Getting-started guide', 'Send newcomers a short guide to the commands they can use here.'),
   number(GUIDE, 'guide.maxEntries', 'Maximum guide entries', 'Maximum number of commands to include in the guide.', 1, 50),

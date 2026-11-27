@@ -25,6 +25,31 @@ function fixture() {
   const tick = n => h.setNow(new Date(`2026-11-21T12:${String(n).padStart(2,'0')}:00Z`));
   return { h, deps, db, edit, config, topics, receipts, held, jobs, tick };
 }
+test('an unavailable rules reader preserves the draft while an explicitly empty rulebook produces a change', async () => {
+  const f = fixture();
+  await f.edit();
+  const service = f.deps.services;
+  f.deps.services = { call: async () => { throw new Error('unavailable'); } };
+  assert.equal((await f.edit()).suggestion, '');
+  f.deps.services = service;
+  f.config.rules.text = '';
+  assert.match((await f.edit()).suggestion, /rules/i);
+});
+
+test('the subscription manager and /updates use the same preference for the current member', async () => {
+  const f = fixture();
+  const service = plugin.registerServices(f.deps).find(s => s.serviceId === 'official.onboarding.subscriptions.v1');
+  const call = { scopeId: scope, actorIdentityId: ada.identityId };
+  const [read, set] = service.methods;
+  assert.deepEqual(await read.handler({}, call), { choice: 'off' });
+  await set.handler({ choice: 'on' }, call);
+  assert.deepEqual(await read.handler({}, call), { choice: 'on' });
+  setSubscription(f.db, scope, ada.identityId, false);
+  assert.deepEqual(await read.handler({}, call), { choice: 'off' });
+  f.held.add(ada.identityId);
+  assert.equal(await set.handler({ choice: 'on' }, call), null);
+});
+
 test('seeds silently, coalesces and dismisses changes, checks preview revision and publishes once', async () => {
   const f = fixture();
   const original = await f.edit();

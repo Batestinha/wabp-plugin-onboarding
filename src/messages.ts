@@ -2,6 +2,9 @@ import type { MessageCatalog } from '@wabs/plugin-sdk/i18n';
 import { ONBOARDING_NAMESPACE as ns } from './constants';
 
 export const onboardingMessages: MessageCatalog = {
+  "official.onboarding.subscription.title": "Community updates",
+  "official.onboarding.subscription.on": "On",
+  "official.onboarding.subscription.off": "Off",
   [`${ns}.editions.current`]: "You’re up to date here.",
   [`${ns}.editions.queued`]: "You have {count} unread edition(s). I’ll send them privately.",
   [`${ns}.editions.off`]: "Private updates are off here. Send /updates on to subscribe.",

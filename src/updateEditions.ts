@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { PluginDatabase } from '@wabs/plugin-sdk/database';
-import { configFor, nowFrom, scopeName, type OnboardingDeps } from './onboarding';
+import { publishedRules, configFor, nowFrom, scopeName, type OnboardingDeps } from './onboarding';
 import { ONBOARDING_NAMESPACE as ns } from './constants';
 
 export const editionRequest = z.object({
@@ -9,7 +9,7 @@ export const editionRequest = z.object({
   audience: z.number().int().nonnegative().optional()
 }).strict();
 
-type Snapshot = { rules: string; topics: string[] | null };
+type Snapshot = { rules: string | null; topics: string[] | null };
 type Draft = { baseline: string; observed: string; body: string; revision: number };
 
 export async function eligibleMembers(deps: OnboardingDeps, scopeId: string): Promise<Set<string>> {
@@ -43,11 +43,13 @@ export async function observeDraft(deps: OnboardingDeps, db: PluginDatabase, sco
   }
   const baseline: Snapshot | undefined = before && JSON.parse(before.baseline);
   const previous: Snapshot | undefined = before && JSON.parse(before.observed);
-  const observed = JSON.stringify({ rules: config.rules.text.trim(), topics: topics ?? previous?.topics ?? null });
+  const rules = await publishedRules(deps, scopeId) ?? previous?.rules ?? null;
+  const observed = JSON.stringify({ rules, topics: topics ?? previous?.topics ?? null });
   if (!before) {
     db.run('INSERT OR IGNORE INTO update_drafts(scope_id, baseline, observed) VALUES (?, ?, ?)', scopeId, observed, observed);
   } else if (observed !== before.observed) {
     // A first member after an empty scope supplies a baseline for the guide.
+    if (baseline && baseline.rules === null && rules !== null) baseline.rules = rules;
     if (baseline && baseline.topics === null && topics !== null) baseline.topics = topics;
     db.run('UPDATE update_drafts SET baseline = ?, observed = ?, revision = revision + 1 WHERE scope_id = ? AND revision = ?',
       JSON.stringify(baseline), observed, scopeId, before.revision);

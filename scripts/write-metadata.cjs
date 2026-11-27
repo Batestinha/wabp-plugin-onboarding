@@ -9,7 +9,8 @@ const pkg = require('../package.json');
 
 const controlled = new Set(onboardingControls.map(control => control.path));
 const metadata = {
-  schemaVersion: 2,
+  schemaVersion: 3,
+  memberSubscriptions: m.memberSubscriptions ?? [],
   pluginId: m.pluginId,
   name: m.name,
   author: m.author,

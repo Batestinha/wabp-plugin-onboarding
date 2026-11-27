@@ -2,17 +2,18 @@ import { z } from 'zod';
 
 const chatIds = z.array(z.string().trim().min(1)).default([]);
 
-export const onboardingConfigSchema = z.object({
+// Old installations can still have Admin's migrated rules in their stored config.
+export const onboardingConfigSchema = z.preprocess(raw => {
+  if (!raw || typeof raw !== 'object' || !Object.hasOwn(raw, 'rules')) return raw;
+  const { rules: _legacy, ...onboarding } = raw as Record<string, unknown>;
+  return onboarding;
+}, z.object({
   enabled: z.boolean().default(false),
   /** Groups whose arrivals never count as arriving in the scope. */
   exemptGroupChatIds: chatIds,
   welcome: z.object({
     /** Empty uses the built-in, translated welcome. Placeholders: {name}, {scope}. */
     text: z.string().max(2000).default('')
-  }).strict().default({}),
-  rules: z.object({
-    /** Shown to newcomers and with /rules. Empty: no rules section. */
-    text: z.string().max(4000).default('')
   }).strict().default({}),
   guide: z.object({
     enabled: z.boolean().default(true),
@@ -43,7 +44,7 @@ export const onboardingConfigSchema = z.object({
     /** Only after leaving every group of the scope for at least this long. */
     minAbsenceDays: z.number().int().min(0).max(3650).default(30)
   }).strict().default({})
-}).strict();
+}).strict());
 
 export type OnboardingConfig = z.infer<typeof onboardingConfigSchema>;
 
